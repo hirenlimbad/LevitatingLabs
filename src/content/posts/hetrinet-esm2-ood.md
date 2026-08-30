@@ -194,7 +194,7 @@ The performance below represents the **Mean ± Standard Deviation across 3 indep
 | Resource | Description | Link |
 | :--- | :--- | :--- |
 | **ESM-2 Model Weights** | Pre-trained 150M-parameter protein language model (`esm2_t30_150M_UR50D`) | [facebook/esm2_t30_150M_UR50D](https://huggingface.co/facebook/esm2_t30_150M_UR50D) |
-| **End-to-End Kaggle Notebook** | Full pipeline: data preparation, baseline & ESM-2 training, and 3-seed stability checks | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/hetrinet-esm-ood-generalization) |
+| **End-to-End Kaggle Notebook** | Full pipeline: data preparation, baseline & ESM-2 training, and 3-seed stability checks | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/hetrinetmemorizationfix) |
 | **DisGeNET Dataset** | Disease-gene association TSV file | [DisGeNET Associations](https://www.kaggle.com/datasets/hirenlimbad/disgnet-disease-associations) |
 | **DrugBank XML Dataset** | Raw DrugBank annotations XML file | [DrugBank XML Dataset](https://www.kaggle.com/datasets/sergeguillemart/drugbank) |
 | **DrugBank 5.1.10 CSV Dataset** | Processed DrugBank bioactivity CSV file | [DrugBank CSV Dataset](https://www.kaggle.com/datasets/devildev89/drug-bank-5110) |
