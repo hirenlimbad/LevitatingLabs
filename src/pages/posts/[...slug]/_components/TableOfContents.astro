@@ -1,0 +1,400 @@
+---
+export type Heading = {
+  depth: number;
+  slug: string;
+  text: string;
+};
+
+type Props = {
+  headings: Heading[];
+};
+
+const { headings } = Astro.props;
+
+type GroupedHeading = {
+  h2: Heading;
+  children: Heading[];
+};
+
+function groupHeadings(rawHeadings: Heading[]): GroupedHeading[] {
+  const groups: GroupedHeading[] = [];
+  let current: GroupedHeading | null = null;
+
+  for (const h of rawHeadings) {
+    if (h.depth === 2) {
+      current = { h2: h, children: [] };
+      groups.push(current);
+    } else if (h.depth === 3 && current) {
+      current.children.push(h);
+    }
+  }
+
+  return groups;
+}
+
+const groupedHeadings = groupHeadings(headings);
+---
+
+{
+  groupedHeadings.length > 0 && (
+    <aside
+      id="toc-sidebar"
+      class="hidden xl:block fixed top-32 left-[calc(50%+25.5rem)] w-80 select-none z-30"
+      aria-label="Table of Contents"
+    >
+      <div class="max-h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden border-s-2 border-border ps-4.5 py-1">
+        <!-- Header -->
+        <div class="mb-3.5 flex items-center justify-between border-b border-border/60 pb-2">
+          <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+            // IN THIS ARTICLE
+          </span>
+          <span class="font-mono text-xs font-bold text-accent">
+            [{groupedHeadings.length}]
+          </span>
+        </div>
+
+        <nav class="mb-4">
+          <ul class="space-y-2 w-full">
+            {groupedHeadings.map(({ h2, children }) => (
+              <li class="toc-group group w-full min-w-0" data-group-slug={h2.slug}>
+                <a
+                  href={`#${h2.slug}`}
+                  title={h2.text}
+                  class="toc-link toc-h2 flex items-center justify-between w-full min-w-0 py-1 text-sm font-bold leading-snug text-foreground/85 hover:text-accent transition-colors focus:outline-none"
+                  data-slug={h2.slug}
+                  data-parent-slug={h2.slug}
+                >
+                  <span class="truncate min-w-0 block flex-1">{h2.text}</span>
+                </a>
+
+                {children.length > 0 && (
+                  <ul class="toc-children hidden mt-1.5 space-y-1.5 ps-3 border-s-2 border-border/60 ms-1 w-full min-w-0">
+                    {children.map(child => (
+                      <li class="w-full min-w-0">
+                        <a
+                          href={`#${child.slug}`}
+                          title={child.text}
+                          class="toc-link toc-h3 block w-full min-w-0 py-0.5 text-xs font-semibold leading-relaxed text-muted-foreground hover:text-accent transition-colors focus:outline-none"
+                          data-slug={child.slug}
+                          data-parent-slug={h2.slug}
+                        >
+                          <span class="truncate min-w-0 block">{child.text}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <!-- Collapsible Figures Section -->
+        <div id="toc-figures-section" class="mt-4 border-t border-border/60 pt-3.5 hidden">
+          <button
+            id="toc-figures-toggle"
+            type="button"
+            class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
+            aria-expanded="false"
+          >
+            <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+              // FIGURES
+            </span>
+            <div class="flex items-center gap-1.5 font-mono text-xs">
+              <span id="toc-figures-count" class="font-bold text-accent">[0]</span>
+              <span id="toc-figures-chevron" class="text-accent font-black text-sm">+</span>
+            </div>
+          </button>
+
+          <ul id="toc-figures-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
+            <!-- Populated dynamically -->
+          </ul>
+        </div>
+
+        <!-- Collapsible Artifacts Section -->
+        <div id="toc-artifacts-section" class="mt-4 border-t border-border/60 pt-3.5 hidden">
+          <button
+            id="toc-artifacts-toggle"
+            type="button"
+            class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
+            aria-expanded="false"
+          >
+            <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+              // ARTIFACTS
+            </span>
+            <div class="flex items-center gap-1.5 font-mono text-xs">
+              <span id="toc-artifacts-count" class="font-bold text-accent">[0]</span>
+              <span id="toc-artifacts-chevron" class="text-accent font-black text-sm">+</span>
+            </div>
+          </button>
+
+          <ul id="toc-artifacts-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
+            <!-- Populated dynamically -->
+          </ul>
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+<script>
+  function setupTocScrollspy() {
+    const tocLinks = document.querySelectorAll<HTMLAnchorElement>(".toc-link");
+    const tocGroups = document.querySelectorAll<HTMLElement>(".toc-group");
+    if (!tocLinks.length) return;
+
+    // Collect heading elements
+    const headingElsMap = new Map<string, HTMLElement>();
+    tocLinks.forEach(link => {
+      const slug = link.getAttribute("data-slug");
+      if (slug) {
+        const el = document.getElementById(slug);
+        if (el) headingElsMap.set(slug, el);
+      }
+    });
+
+    function setActiveGroup(activeParentSlug: string | null) {
+      tocGroups.forEach(group => {
+        const groupSlug = group.getAttribute("data-group-slug");
+        const childrenList = group.querySelector(".toc-children");
+
+        if (groupSlug === activeParentSlug) {
+          childrenList?.classList.remove("hidden");
+        } else {
+          childrenList?.classList.add("hidden");
+        }
+      });
+    }
+
+    function highlightLink(activeSlug: string) {
+      let activeParentSlug: string | null = null;
+
+      tocLinks.forEach(link => {
+        const slug = link.getAttribute("data-slug");
+        const parentSlug = link.getAttribute("data-parent-slug");
+
+        if (slug === activeSlug) {
+          activeParentSlug = parentSlug;
+          link.classList.add("text-accent", "font-black");
+          link.classList.remove("text-foreground/85", "text-muted-foreground");
+        } else {
+          link.classList.remove("text-accent", "font-black");
+          if (link.classList.contains("toc-h3")) {
+            link.classList.add("text-muted-foreground");
+          } else {
+            link.classList.add("text-foreground/85");
+          }
+        }
+      });
+
+      if (activeParentSlug) {
+        setActiveGroup(activeParentSlug);
+      }
+    }
+
+    const observerOptions: IntersectionObserverInit = {
+      rootMargin: "-90px 0px -70% 0px",
+      threshold: 0,
+    };
+
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute("id");
+          if (id) {
+            highlightLink(id);
+          }
+        }
+      }
+    }, observerOptions);
+
+    headingElsMap.forEach(el => observer.observe(el));
+
+    // Click handler for immediate feedback
+    tocLinks.forEach(link => {
+      link.addEventListener("click", () => {
+        const slug = link.getAttribute("data-slug");
+        const parentSlug = link.getAttribute("data-parent-slug");
+        if (slug) {
+          highlightLink(slug);
+        }
+        if (parentSlug) {
+          setActiveGroup(parentSlug);
+        }
+      });
+    });
+  }
+
+  function setupFiguresNav() {
+    const article = document.getElementById("article");
+    const figuresSection = document.getElementById("toc-figures-section");
+    const figuresList = document.getElementById("toc-figures-list");
+    const figuresCount = document.getElementById("toc-figures-count");
+    const figuresToggle = document.getElementById("toc-figures-toggle");
+    const figuresChevron = document.getElementById("toc-figures-chevron");
+    if (!article || !figuresSection || !figuresList || !figuresCount || !figuresToggle || !figuresChevron) return;
+
+    figuresList.innerHTML = "";
+    const images = Array.from(article.querySelectorAll<HTMLImageElement>("img"));
+    
+    if (images.length === 0) {
+      figuresSection.classList.add("hidden");
+      return;
+    }
+
+    figuresCount.textContent = `[${images.length}]`;
+
+    images.forEach((img, index) => {
+      const figNum = index + 1;
+      const figId = img.id || `article-figure-${figNum}`;
+      img.id = figId;
+
+      const alt = img.getAttribute("alt") || "";
+      const caption = alt || `Figure ${figNum}`;
+
+      const li = document.createElement("li");
+      li.className = "w-full min-w-0";
+
+      const a = document.createElement("a");
+      a.href = `#${figId}`;
+      a.title = caption;
+      a.className = "toc-figure-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+
+      a.innerHTML = `
+        <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${figNum}</span>
+        <span class="truncate min-w-0 block flex-1 font-semibold">${caption}</span>
+      `;
+
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        img.scrollIntoView({ behavior: "smooth", block: "center" });
+        img.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
+        setTimeout(() => img.classList.remove("ring-2", "ring-accent"), 2000);
+      });
+
+      li.appendChild(a);
+      figuresList.appendChild(li);
+    });
+
+    // Collapsible toggle functionality (+ / -)
+    figuresToggle.onclick = (e) => {
+      e.preventDefault();
+      const isExpanded = figuresToggle.getAttribute("aria-expanded") === "true";
+      if (isExpanded) {
+        figuresList.classList.add("hidden");
+        figuresChevron.textContent = "+";
+        figuresToggle.setAttribute("aria-expanded", "false");
+      } else {
+        figuresList.classList.remove("hidden");
+        figuresChevron.textContent = "−";
+        figuresToggle.setAttribute("aria-expanded", "true");
+      }
+    };
+
+    figuresSection.classList.remove("hidden");
+  }
+
+  function setupArtifactsNav() {
+    const article = document.getElementById("article");
+    const artifactsSection = document.getElementById("toc-artifacts-section");
+    const artifactsList = document.getElementById("toc-artifacts-list");
+    const artifactsCount = document.getElementById("toc-artifacts-count");
+    const artifactsToggle = document.getElementById("toc-artifacts-toggle");
+    const artifactsChevron = document.getElementById("toc-artifacts-chevron");
+    if (!article || !artifactsSection || !artifactsList || !artifactsCount || !artifactsToggle || !artifactsChevron) return;
+
+    artifactsList.innerHTML = "";
+    
+    // Find all external resource/code/dataset links inside the article
+    const anchorTags = Array.from(article.querySelectorAll<HTMLAnchorElement>("a[href]"));
+    
+    const artifactLinks = anchorTags.filter(a => {
+      const href = a.href || "";
+      const text = a.textContent?.trim() || "";
+      const isExternalResource = href.includes("kaggle.com") || 
+                                 href.includes("github.com") || 
+                                 href.endsWith(".py") || 
+                                 href.endsWith(".ipynb") ||
+                                 href.includes("/datasets/") ||
+                                 href.includes("/code/");
+      return isExternalResource && text.length > 0;
+    });
+
+    // Deduplicate by href
+    const uniqueArtifactsMap = new Map<string, { href: string; text: string }>();
+    artifactLinks.forEach(a => {
+      if (!uniqueArtifactsMap.has(a.href)) {
+        uniqueArtifactsMap.set(a.href, { href: a.href, text: a.textContent?.trim() || "Resource" });
+      }
+    });
+
+    const uniqueArtifacts = Array.from(uniqueArtifactsMap.values());
+
+    if (uniqueArtifacts.length === 0) {
+      artifactsSection.classList.add("hidden");
+      return;
+    }
+
+    artifactsCount.textContent = `[${uniqueArtifacts.length}]`;
+
+    uniqueArtifacts.forEach(({ href, text }) => {
+      let badgeLabel = "LINK";
+      if (href.endsWith(".py") || href.includes("/code/") || text.endsWith(".py")) {
+        badgeLabel = "CODE";
+      } else if (href.includes("/datasets/") || href.includes("dataset")) {
+        badgeLabel = "DATA";
+      } else if (href.includes("github.com")) {
+        badgeLabel = "REPO";
+      }
+
+      const li = document.createElement("li");
+      li.className = "w-full min-w-0";
+
+      const a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.title = `${text} (${href})`;
+      a.className = "toc-artifact-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+
+      a.innerHTML = `
+        <span class="font-mono text-[10px] font-black text-accent shrink-0 uppercase tracking-tighter">[${badgeLabel}]</span>
+        <span class="truncate min-w-0 block flex-1 font-semibold">${text}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground/70 ms-0.5">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      `;
+
+      li.appendChild(a);
+      artifactsList.appendChild(li);
+    });
+
+    // Collapsible toggle functionality (+ / -)
+    artifactsToggle.onclick = (e) => {
+      e.preventDefault();
+      const isExpanded = artifactsToggle.getAttribute("aria-expanded") === "true";
+      if (isExpanded) {
+        artifactsList.classList.add("hidden");
+        artifactsChevron.textContent = "+";
+        artifactsToggle.setAttribute("aria-expanded", "false");
+      } else {
+        artifactsList.classList.remove("hidden");
+        artifactsChevron.textContent = "−";
+        artifactsToggle.setAttribute("aria-expanded", "true");
+      }
+    };
+
+    artifactsSection.classList.remove("hidden");
+  }
+
+  function initToc() {
+    setupTocScrollspy();
+    setupFiguresNav();
+    setupArtifactsNav();
+  }
+
+  initToc();
+  document.addEventListener("astro:after-swap", initToc);
+</script>

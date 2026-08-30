@@ -1,0 +1,62 @@
+---
+type Props = {
+  class?: string;
+  title?: string;
+  caption?: string;
+  variant?:
+    | "standard"
+    /** No borders */
+    | "minimal"
+    /** Zebra striping */
+    | "striped"
+    /** Zebra + minimal */
+    | "striped-minimal"
+    /** Dense padding for metric-heavy tables */
+    | "compact"
+    /** Full grid borders */
+    | "bordered";
+};
+
+const { class: className, title, caption, variant = "standard" } = Astro.props;
+
+const variantClasses = {
+  minimal: "[&_td]:border-b-0 [&_th]:border-b-0 [&_table]:border-0",
+  striped: "[&_tbody_tr:nth-child(odd)]:bg-muted/15 dark:[&_tbody_tr:nth-child(odd)]:bg-muted/10",
+  compact: "[&_th]:py-2 [&_th]:px-3 [&_td]:py-2 [&_td]:px-3 [&_td]:text-xs",
+  bordered: "[&_td]:border [&_td]:border-border/40 [&_th]:border [&_th]:border-border/60",
+};
+---
+
+<div
+  data-table-variant={variant}
+  class:list={[
+    "my-6 w-full overflow-hidden rounded-xl border border-border/70 bg-muted/20 shadow-2xs backdrop-blur-xs transition-shadow duration-200 hover:shadow-xs",
+    "[&_table]:my-0 [&_table]:w-full [&_table]:min-w-full [&_table]:border-0 [&_table]:rounded-none [&_table]:shadow-none",
+    variant === "minimal" && variantClasses.minimal,
+    variant === "striped" && variantClasses.striped,
+    variant === "compact" && variantClasses.compact,
+    variant === "bordered" && variantClasses.bordered,
+    variant === "striped-minimal" &&
+      `${variantClasses.minimal} ${variantClasses.striped}`,
+    className,
+  ]}
+>
+  {(title || caption) && (
+    <div class="border-b border-border/60 bg-muted/30 px-4 py-2.5 dark:bg-muted/15 flex items-center justify-between">
+      {title && (
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </span>
+      )}
+      {caption && (
+        <span class="text-xs text-muted-foreground opacity-80">
+          {caption}
+        </span>
+      )}
+    </div>
+  )}
+  <div class="relative w-full overflow-x-auto scrollbar-thin scrollbar-color-muted">
+    <slot />
+  </div>
+</div>
+

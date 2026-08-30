@@ -1,0 +1,171 @@
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  /* ===== Override default Tailwind Typography styles ===== */
+  .app-prose {
+    @apply prose;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    th {
+      @apply text-foreground mb-3;
+    }
+
+    h3 {
+      @apply italic;
+    }
+
+    p,
+    strong,
+    ol,
+    ul,
+    figcaption,
+    table,
+    code {
+      @apply text-foreground;
+    }
+
+    a {
+      @apply text-foreground hover:text-accent wrap-break-word decoration-dashed underline-offset-4 focus-visible:no-underline;
+    }
+
+    ul {
+      @apply overflow-x-clip;
+    }
+
+    li {
+      @apply marker:text-accent;
+    }
+
+    hr {
+      @apply border-border;
+    }
+
+    img {
+      @apply border-border mx-auto border;
+    }
+
+    img[role="button"] {
+      @apply cursor-zoom-in;
+
+      &:focus-visible {
+        @apply outline-2 outline-offset-2 outline-dashed;
+      }
+    }
+
+    figcaption {
+      @apply opacity-75;
+    }
+
+    .table-wrapper {
+      @apply my-6 w-full overflow-x-auto rounded-xl border border-border/70 bg-muted/20 shadow-2xs backdrop-blur-xs;
+
+      table {
+        @apply my-0 min-w-full border-0 rounded-none shadow-none;
+      }
+    }
+
+    table {
+      @apply my-6 w-full border-collapse text-sm overflow-hidden rounded-xl border border-border/70 bg-muted/10;
+
+      thead {
+        @apply bg-muted/40 dark:bg-muted/20;
+      }
+
+      thead tr,
+      tr:first-child:has(th) {
+        @apply border-b border-border/80;
+      }
+
+      th {
+        @apply border-b border-border/80 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 dark:bg-muted/15;
+      }
+
+      td {
+        @apply border-b border-border/30 px-4 py-3 text-foreground align-middle tabular-nums;
+      }
+
+      tbody tr {
+        @apply transition-colors duration-150;
+
+        &:last-child td {
+          @apply border-b-0;
+        }
+
+        &:hover {
+          @apply bg-accent/5;
+        }
+      }
+
+      caption {
+        @apply py-2.5 px-4 text-xs font-medium text-muted-foreground text-left border-b border-border/40 bg-muted/20;
+      }
+    }
+
+    code {
+      @apply bg-muted/75 text-foreground rounded p-1 wrap-break-word before:content-none after:content-none;
+    }
+
+    .astro-code code {
+      @apply flex-[1_0_100%] bg-inherit p-0;
+    }
+
+    blockquote {
+      @apply border-s-accent/80 wrap-break-word opacity-80;
+    }
+
+    details:not(.callout) {
+      @apply text-foreground inline-block cursor-pointer select-none [&_p]:hidden [&_ul]:my-0!;
+    }
+
+    summary {
+      @apply focus-visible:outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-dashed;
+    }
+
+    pre {
+      @apply focus-visible:outline-accent focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-dashed;
+    }
+  }
+
+  /* ===== Code Blocks & Syntax Highlighting ===== */
+  .astro-code {
+    @apply outline-border flex border bg-(--shiki-light-bg) text-(--shiki-light) [&_span]:text-(--shiki-light);
+  }
+
+  html[data-theme="dark"] .astro-code {
+    @apply bg-(--shiki-dark-bg) text-(--shiki-dark) [&_span]:text-(--shiki-dark);
+  }
+
+  /* Styles for Shiki transformers */
+  /* https://shiki.style/packages/transformers */
+  .astro-code {
+    .line.diff.add {
+      @apply relative inline-block w-full bg-green-400/20 before:absolute before:-left-3 before:text-green-500 before:content-['+'];
+    }
+    .line.diff.remove {
+      @apply relative inline-block w-full bg-red-500/20 before:absolute before:-left-3 before:text-red-500 before:content-['-'];
+    }
+    .line.highlighted {
+      @apply inline-block w-full bg-slate-400/20;
+    }
+    .highlighted-word {
+      @apply border-border rounded-sm border px-0.5 py-px;
+    }
+  }
+
+  /* ===== KaTeX Math Equation Styles & Dark Mode Contrast ===== */
+  .katex-display {
+    @apply my-6 overflow-x-auto overflow-y-hidden rounded-lg border border-border/50 bg-muted/20 p-4 text-foreground;
+  }
+
+  .katex {
+    color: var(--foreground) !important;
+  }
+
+  .katex * {
+    color: inherit !important;
+    border-color: var(--foreground) !important;
+  }
+}
