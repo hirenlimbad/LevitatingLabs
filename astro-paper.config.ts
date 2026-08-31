@@ -7,7 +7,7 @@ export default defineAstroPaperConfig({
     description: "An open research notebook dedicated to AI in drug discovery. Sharing focused findings, computational breakdowns, and methodological insights in real time.",
     author: "Levitating Labs",
     profile: "https://github.com/levitatinglabs",
-    ogImage: "default-og.jpg",
+    ogImage: "full_prev.png",
     lang: "en",
     timezone: "UTC",
     dir: "ltr",
