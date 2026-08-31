@@ -25,6 +25,7 @@ const decodeSegment = (value: string) => {
 };
 
 const navLabels: Record<string, string> = {
+  articles: t.nav.posts,
   posts: t.nav.posts,
   tags: t.nav.tags,
   about: t.nav.about,
@@ -32,9 +33,9 @@ const navLabels: Record<string, string> = {
   search: t.nav.search,
 };
 
-// if breadcrumb is Home > Posts > [page] <etc>
-// replace Posts with localized "Posts (page number)"
-if (breadcrumbList[0] === "posts") {
+// if breadcrumb is Home > Articles > [page] <etc>
+// replace Articles with localized "Articles (page number)"
+if (breadcrumbList[0] === "articles" || breadcrumbList[0] === "posts") {
   breadcrumbList.splice(
     0,
     2,
