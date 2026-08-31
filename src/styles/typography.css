@@ -1,6 +1,10 @@
 @plugin "@tailwindcss/typography";
 
 @layer base {
+  mark {
+    @apply bg-amber-500/15 text-foreground dark:bg-amber-400/20 rounded-md px-1.5 py-0.5 border border-amber-500/30 dark:border-amber-400/30;
+  }
+
   /* ===== Override default Tailwind Typography styles ===== */
   .app-prose {
     @apply prose;
@@ -41,6 +45,10 @@
 
     hr {
       @apply border-border;
+    }
+
+    mark {
+      @apply bg-amber-500/15 text-foreground dark:bg-amber-400/20 rounded-md px-1.5 py-0.5 border border-amber-500/30 dark:border-amber-400/30;
     }
 
     img {

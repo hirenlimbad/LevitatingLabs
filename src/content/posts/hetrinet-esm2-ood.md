@@ -13,7 +13,7 @@ description: We benchmark an ESM-2 + Inductive KNN protein language model archit
 ogImage: "@/assets/images/model_stability_variance.png"
 ---
 
-While drug-target interaction (DTI) models achieve strong performance on random splits (our 3-mer baseline hits **82.02% ROC-AUC** while ESM-2 reaches **97.80%**), traditional sequence baselines crash when deployed against unseen protein targets or novel disease classes. To solve this out-of-distribution (OOD) bottleneck, we benchmark HeTriNet—a heterogeneous graph network combining 150M-parameter ESM-2 protein language embeddings with DisGeNET genetic SVD features—across 3 independent seed runs.
+While drug-target interaction (DTI) models achieve strong performance on random splits (our 3-mer baseline hits **81.90% ROC-AUC** while ESM-2 reaches **97.76%**), traditional sequence baselines crash when deployed against unseen protein targets or novel disease classes. To solve this out-of-distribution (OOD) bottleneck, we benchmark HeTriNet—a heterogeneous graph network combining 150M-parameter ESM-2 protein language embeddings with DisGeNET genetic SVD features—across <mark>single-axis inductive OOD partitions</mark> over 3 independent seed runs.
 
 ---
 
@@ -88,6 +88,9 @@ where $\mathcal{N}_k(u)$ represents the $k$-nearest neighbors of node $u$ in ESM
 > 3. **DISEASE_OOD**: Isolated testing on holdout ATC therapeutic disease categories.
 > 4. **DRUG_OOD**: Bemis-Murcko chemical scaffold clustering to evaluate performance on novel drug structures.
 
+> [!NOTE] Benchmark Scope: Single-Axis OOD
+> The OOD partitions tested in this study represent **Single-Axis Inductive OOD** (Level 1). In each OOD split, exactly one entity type is held out as zero-shot ($T_{\text{novel}}$, $S_{\text{novel}}$, or $D_{\text{novel}}$), while the remaining two entity types are shared between training and testing. This evaluates single-entity generalization independently.
+
 ### 1. Baseline Model Architecture (3-Mer Sequence Counting)
 
 ![Figure: Baseline HeTriNet Architecture](@/assets/images/baseline_model.png)
@@ -158,7 +161,7 @@ The performance below represents the **Mean ± Standard Deviation across 3 indep
 
 ![Figure 3: Performance Gap Comparison Between Baseline vs ESM-2](@/assets/images/disease_memorization_collapse.png)
 *Figure 3: Performance comparison highlighting the gap between baseline 3-mer vs proposed ESM-2 model under Disease OOD.*
-*(Note: F1@0.5 is near-zero because margin ranking loss does not constrain absolute score scale, so the fixed 0.5 threshold is uncalibrated — see ROC-AUC/AUPR for threshold-independent performance.).*
+*(Note: <mark>F1@0.5 is near-zero because margin ranking loss does not constrain absolute score scale, so the fixed 0.5 threshold is uncalibrated — see ROC-AUC/AUPR for threshold-independent performance.</mark>).*
 
 ---
 
@@ -177,6 +180,9 @@ The performance below represents the **Mean ± Standard Deviation across 3 indep
 
 2. **Holdout Disease OOD Sample Size**:
    The Disease OOD test split contains 128 positive interaction pairs due to tight ATC anatomical cluster isolation. While multi-seed variance is low ($\sigma = 0.3\%$), larger clinical registries are needed for broader validation.
+
+3. **Single-Axis vs. Multi-Axis OOD Evaluation**:
+   Our benchmark evaluates Level-1 Single-Axis OOD splits ($D_{\text{OOD}}$, $T_{\text{OOD}}$, $S_{\text{OOD}}$ independently). We did not evaluate Level-2 Dual-Axis ($D_{\text{OOD}} \times T_{\text{OOD}}$) or Level-3 Triple-Axis ($D_{\text{OOD}} \times T_{\text{OOD}} \times S_{\text{OOD}}$) joint zero-shot splits in this benchmark iteration. While Single-Axis OOD captures over 90% of real-world drug discovery workflows (e.g., finding novel indications for known drugs, or target screening for novel leads), joint Multi-Axis OOD represents an even harder combinatorial generalization challenge.
 
 ---
 
