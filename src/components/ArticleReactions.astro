@@ -1,15 +1,14 @@
 ---
 ---
 
-<section class="mt-12 border-t border-dashed border-border/80 pt-8">
-  <h2 class="text-foreground mb-6 text-xl font-semibold">Comments & Discussions</h2>
-  <div class="giscus"></div>
-</section>
+<div class="giscus-reactions-wrapper min-h-[40px] flex items-center">
+  <div class="giscus-reactions"></div>
+</div>
 
 <script is:inline data-astro-rerun>
-  function loadGiscus() {
+  function loadGiscusReactions() {
     const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-    const container = document.querySelector(".giscus");
+    const container = document.querySelector(".giscus-reactions");
     if (!container) return;
 
     container.innerHTML = "";
@@ -22,9 +21,9 @@
     script.setAttribute("data-category-id", "DIC_kwDOUJg1rM4DF8ce");
     script.setAttribute("data-mapping", "pathname");
     script.setAttribute("data-strict", "0");
-    script.setAttribute("data-reactions-enabled", "0");
+    script.setAttribute("data-reactions-enabled", "1");
     script.setAttribute("data-emit-metadata", "0");
-    script.setAttribute("data-input-position", "bottom");
+    script.setAttribute("data-input-position", "top");
     script.setAttribute("data-theme", theme);
     script.setAttribute("data-lang", "en");
     script.setAttribute("crossorigin", "anonymous");
@@ -33,14 +32,13 @@
     container.appendChild(script);
   }
 
-  loadGiscus();
+  loadGiscusReactions();
 
-  // Watch for theme toggles dynamically
-  if (!window.__giscusObserverBound) {
-    window.__giscusObserverBound = true;
+  if (!window.__giscusReactionsObserverBound) {
+    window.__giscusReactionsObserverBound = true;
     const observer = new MutationObserver(() => {
       const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-      const iframe = document.querySelector("iframe.giscus-frame");
+      const iframe = document.querySelector(".giscus-reactions iframe.giscus-frame");
       if (iframe && iframe.contentWindow) {
         iframe.contentWindow.postMessage(
           { giscus: { setConfig: { theme } } },
