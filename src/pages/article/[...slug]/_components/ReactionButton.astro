@@ -1,0 +1,49 @@
+---
+export type Props = {
+  class?: string;
+};
+
+const { class: className = "" } = Astro.props;
+---
+
+<button
+  id="reaction-btn"
+  type="button"
+  class:list={[
+    "inline-flex items-center gap-2 rounded-lg border border-border/80 bg-background/80 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-xs transition-all hover:border-accent hover:bg-accent/10 hover:text-accent focus:outline-none cursor-pointer",
+    className,
+  ]}
+  title="React or comment on this article"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+  </svg>
+  <span>React / Upvote</span>
+</button>
+
+<script>
+  function setupReactionButton() {
+    const btn = document.getElementById("reaction-btn");
+    if (!btn) return;
+
+    btn.onclick = () => {
+      const commentsSec = document.getElementById("comments");
+      if (commentsSec) {
+        commentsSec.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+  }
+
+  setupReactionButton();
+  document.addEventListener("astro:after-swap", setupReactionButton);
+</script>
