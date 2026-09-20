@@ -37,107 +37,174 @@ const groupedHeadings = groupHeadings(headings);
 
 {
   groupedHeadings.length > 0 && (
-    <aside
-      id="toc-sidebar"
-      class="hidden xl:block fixed top-32 left-[calc(50%+25.5rem)] w-80 select-none z-30"
-      aria-label="Table of Contents"
-    >
-      <div class="max-h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden border-s-2 border-border ps-4.5 py-1">
-        <!-- Header -->
-        <div class="mb-3.5 flex items-center justify-between border-b border-border/60 pb-2">
-          <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
-            // IN THIS ARTICLE
-          </span>
-          <span class="font-mono text-xs font-bold text-accent">
-            [{groupedHeadings.length}]
-          </span>
-        </div>
+    <>
+      <!-- Floating Unhide Button (Shown when TOC is hidden) -->
+      <button
+        id="toc-show-btn"
+        type="button"
+        title="Show Table of Contents"
+        aria-label="Show Table of Contents"
+        class="hidden xl:hidden-when-open fixed top-28 end-6 z-40 items-center gap-1.5 rounded-lg border border-border/80 bg-background/90 text-accent backdrop-blur-md px-3 py-1.5 text-xs font-mono font-bold shadow-lg hover:border-accent hover:bg-accent/10 transition-all cursor-pointer"
+      >
+        <span>// TOC</span>
+        <span class="text-[10px] font-mono text-muted-foreground">[{groupedHeadings.length}]</span>
+      </button>
 
-        <nav class="mb-4">
-          <ul class="space-y-2 w-full">
-            {groupedHeadings.map(({ h2, children }) => (
-              <li class="toc-group group w-full min-w-0" data-group-slug={h2.slug}>
-                <a
-                  href={`#${h2.slug}`}
-                  title={h2.text}
-                  class="toc-link toc-h2 flex items-center justify-between w-full min-w-0 py-1 text-sm font-bold leading-snug text-foreground/85 hover:text-accent transition-colors focus:outline-none"
-                  data-slug={h2.slug}
-                  data-parent-slug={h2.slug}
-                >
-                  <span class="truncate min-w-0 block flex-1">{h2.text}</span>
-                </a>
-
-                {children.length > 0 && (
-                  <ul class="toc-children hidden mt-1.5 space-y-1.5 ps-3 border-s-2 border-border/60 ms-1 w-full min-w-0">
-                    {children.map(child => (
-                      <li class="w-full min-w-0">
-                        <a
-                          href={`#${child.slug}`}
-                          title={child.text}
-                          class="toc-link toc-h3 block w-full min-w-0 py-0.5 text-xs font-semibold leading-relaxed text-muted-foreground hover:text-accent transition-colors focus:outline-none"
-                          data-slug={child.slug}
-                          data-parent-slug={h2.slug}
-                        >
-                          <span class="truncate min-w-0 block">{child.text}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <!-- Collapsible Figures Section -->
-        <div id="toc-figures-section" class="mt-4 border-t border-border/60 pt-3.5 hidden">
-          <button
-            id="toc-figures-toggle"
-            type="button"
-            class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
-            aria-expanded="false"
-          >
+      <aside
+        id="toc-sidebar"
+        class="hidden xl:block fixed top-32 left-[calc(50%+25.5rem)] w-80 select-none z-30 transition-opacity duration-200"
+        aria-label="Table of Contents"
+      >
+        <div class="max-h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden border-s-2 border-border ps-4.5 py-1">
+          <!-- Header -->
+          <div class="mb-3.5 flex items-center justify-between border-b border-border/60 pb-2">
             <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
-              // FIGURES
+              // IN THIS ARTICLE
             </span>
-            <div class="flex items-center gap-1.5 font-mono text-xs">
-              <span id="toc-figures-count" class="font-bold text-accent">[0]</span>
-              <span id="toc-figures-chevron" class="text-accent font-black text-sm">+</span>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs font-bold text-accent">
+                [{groupedHeadings.length}]
+              </span>
+              <button
+                id="toc-hide-btn"
+                type="button"
+                title="Hide Table of Contents"
+                aria-label="Hide Table of Contents"
+                class="font-mono text-[10px] font-bold text-muted-foreground hover:text-accent cursor-pointer transition-colors px-1.5 py-0.5 rounded border border-border/50 hover:border-accent/60"
+              >
+                Hide ✕
+              </button>
             </div>
-          </button>
+          </div>
 
-          <ul id="toc-figures-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
-            <!-- Populated dynamically -->
-          </ul>
+          <nav class="mb-4">
+            <ul class="space-y-2 w-full">
+              {groupedHeadings.map(({ h2, children }) => (
+                <li class="toc-group group w-full min-w-0" data-group-slug={h2.slug}>
+                  <a
+                    href={`#${h2.slug}`}
+                    title={h2.text}
+                    class="toc-link toc-h2 flex items-center justify-between w-full min-w-0 py-1 text-sm font-bold leading-snug text-foreground/85 hover:text-accent transition-colors focus:outline-none"
+                    data-slug={h2.slug}
+                    data-parent-slug={h2.slug}
+                  >
+                    <span class="truncate min-w-0 block flex-1">{h2.text}</span>
+                  </a>
+
+                  {children.length > 0 && (
+                    <ul class="toc-children hidden mt-1.5 space-y-1.5 ps-3 border-s-2 border-border/60 ms-1 w-full min-w-0">
+                      {children.map(child => (
+                        <li class="w-full min-w-0">
+                          <a
+                            href={`#${child.slug}`}
+                            title={child.text}
+                            class="toc-link toc-h3 block w-full min-w-0 py-0.5 text-xs font-semibold leading-relaxed text-muted-foreground hover:text-accent transition-colors focus:outline-none"
+                            data-slug={child.slug}
+                            data-parent-slug={h2.slug}
+                          >
+                            <span class="truncate min-w-0 block">{child.text}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <!-- Collapsible Figures Section -->
+          <div id="toc-figures-section" class="mt-4 border-t border-border/60 pt-3.5 hidden">
+            <button
+              id="toc-figures-toggle"
+              type="button"
+              class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
+              aria-expanded="false"
+            >
+              <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+                // FIGURES
+              </span>
+              <div class="flex items-center gap-1.5 font-mono text-xs">
+                <span id="toc-figures-count" class="font-bold text-accent">[0]</span>
+                <span id="toc-figures-chevron" class="text-accent font-black text-sm">+</span>
+              </div>
+            </button>
+
+            <ul id="toc-figures-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
+              <!-- Populated dynamically -->
+            </ul>
+          </div>
+
+          <!-- Collapsible Artifacts Section -->
+          <div id="toc-artifacts-section" class="mt-4 border-t border-border/60 pt-3.5 hidden">
+            <button
+              id="toc-artifacts-toggle"
+              type="button"
+              class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
+              aria-expanded="false"
+            >
+              <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+                // ARTIFACTS
+              </span>
+              <div class="flex items-center gap-1.5 font-mono text-xs">
+                <span id="toc-artifacts-count" class="font-bold text-accent">[0]</span>
+                <span id="toc-artifacts-chevron" class="text-accent font-black text-sm">+</span>
+              </div>
+            </button>
+
+            <ul id="toc-artifacts-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
+              <!-- Populated dynamically -->
+            </ul>
+          </div>
         </div>
-
-        <!-- Collapsible Artifacts Section -->
-        <div id="toc-artifacts-section" class="mt-4 border-t border-border/60 pt-3.5 hidden">
-          <button
-            id="toc-artifacts-toggle"
-            type="button"
-            class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
-            aria-expanded="false"
-          >
-            <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
-              // ARTIFACTS
-            </span>
-            <div class="flex items-center gap-1.5 font-mono text-xs">
-              <span id="toc-artifacts-count" class="font-bold text-accent">[0]</span>
-              <span id="toc-artifacts-chevron" class="text-accent font-black text-sm">+</span>
-            </div>
-          </button>
-
-          <ul id="toc-artifacts-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
-            <!-- Populated dynamically -->
-          </ul>
-        </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   )
 }
 
 <script>
+  function setupTocToggle() {
+    const sidebar = document.getElementById("toc-sidebar");
+    const hideBtn = document.getElementById("toc-hide-btn");
+    const showBtn = document.getElementById("toc-show-btn");
+
+    if (!sidebar || !hideBtn || !showBtn) return;
+
+    const sb = sidebar;
+    const btnShow = showBtn;
+
+    function hideToc() {
+      sb.style.display = "none";
+      btnShow.classList.remove("hidden");
+      btnShow.classList.add("xl:flex");
+      localStorage.setItem("tocHidden", "true");
+    }
+
+    function showToc() {
+      sb.style.display = "";
+      btnShow.classList.add("hidden");
+      btnShow.classList.remove("xl:flex");
+      localStorage.setItem("tocHidden", "false");
+    }
+
+    hideBtn.onclick = (e) => {
+      e.preventDefault();
+      hideToc();
+    };
+
+    btnShow.onclick = (e) => {
+      e.preventDefault();
+      showToc();
+    };
+
+    const isHidden = localStorage.getItem("tocHidden") === "true";
+    if (isHidden) {
+      hideToc();
+    } else {
+      showToc();
+    }
+  }
+
   function setupTocScrollspy() {
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>(".toc-link");
     const tocGroups = document.querySelectorAll<HTMLElement>(".toc-group");
@@ -390,6 +457,7 @@ const groupedHeadings = groupHeadings(headings);
   }
 
   function initToc() {
+    setupTocToggle();
     setupTocScrollspy();
     setupFiguresNav();
     setupArtifactsNav();
