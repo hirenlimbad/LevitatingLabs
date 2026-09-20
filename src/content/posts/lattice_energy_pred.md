@@ -97,8 +97,13 @@ $$
 ![Figure 1: Overall System Pipeline & Multimodal Feature Engine](@/assets/images/lattice_energy_pred/model_architecture.png)
 *Figure 1: Overall system pipeline featurizing 2,243-D multimodal molecular vectors for lattice enthalpy and melting point prediction.*
 
+<div class="mx-auto my-6 max-w-lg text-center">
+
 ![Figure 2: LatticePhysicsTower Neural Network Architecture Zoom-In](@/assets/images/lattice_energy_pred/lattice_tower_architecture.png)
+
 *Figure 2: Zoom-in view of the LatticePhysicsTower MLP architecture (~148k parameters) with global target mean initialization ($\mu_y = 21.46\text{ kJ/mol}$).*
+
+</div>
 
 ---
 
