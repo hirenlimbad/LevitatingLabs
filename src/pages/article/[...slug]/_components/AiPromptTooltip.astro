@@ -11,7 +11,7 @@ const encodedPrompt = encodeURIComponent(promptText);
 
 const chatGptUrl = `https://chatgpt.com/?q=${encodedPrompt}`;
 const claudeUrl = `https://claude.ai/new?q=${encodedPrompt}`;
-const geminiUrl = `https://gemini.google.com/app`;
+const geminiUrl = `https://gemini.google.com/app?prompt=${encodedPrompt}`;
 ---
 
 <div class="relative inline-block text-left" id="ai-prompt-wrapper">
@@ -37,7 +37,7 @@ const geminiUrl = `https://gemini.google.com/app`;
     >
       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
     </svg>
-    <span>Ask AI</span>
+    <span>Discuss with AI ✦</span>
   </button>
 
   <!-- Tooltip Dropdown Box -->
