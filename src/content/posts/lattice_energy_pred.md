@@ -14,7 +14,14 @@ description: We benchmark a 2,243-dimensional Pure Physics Neural Network agains
 ogImage: "@/assets/images/lattice_energy_pred/scaffold_shift_summary.png"
 ---
 
-While molecular machine learning models achieve strong performance on random train/test splits (our pure physics baseline reaches **0.7983 R²** with a $dH\text{ MAE}$ of **1.723 kJ/mol**), traditional evaluation schemes mask severe degradation when deployed against novel chemical core topologies. To quantify this out-of-distribution (OOD) generalization gap, we benchmark `LatticePhysicsTower`—a physics-guided neural network combining 2,243-dimensional multimodal descriptors with thermodynamic mapping—across target-quantile <mark>stratified Bemis-Murcko scaffold partitions</mark> on 23,496 organic compounds from the Bradley Open Melting Point Dataset.
+Molecular machine learning models often boast high accuracy on paper, but when deployed to discover novel drug candidates or materials, performance drops sharply. Why? Standard evaluation relies on **random train/test splits**, where the model accidentally memorizes chemical core frameworks it has already seen during training.
+
+In this work, we benchmark `LatticePhysicsTower`—a physics-guided neural network combining **2,243-dimensional multimodal descriptors** (2D topology + 3D Boltzmann-weighted conformer physics) with thermodynamic scaling on **23,496 organic compounds** from the Bradley Open Melting Point Dataset. We systematically evaluate standard random splits against out-of-distribution (OOD) **Bemis-Murcko scaffold splits**, quantify the real-world generalization penalty, and investigate why Retrieval-Augmented Generation (RAG) memory banks fail under scaffold shift.
+
+> [!NOTE] Executive Summary (TL;DR)
+> - **The 14.1% OOD Gap:** Standard random splits yield an inflated **0.7983 R²**. Holding out unseen molecular scaffolds drops performance to **0.6570 R²** ($\Delta R^2 = -0.1413$).
+> - **Method Fix:** Target-quantile scaffold stratification combined with **Normalized MAE ($\text{nMAE} = \text{MAE}/\sigma_y$)** stabilizes 5-fold cross-validation at **0.4729 ± 0.0136 nMAE**.
+> - **Why Naive RAG Failed:** 2D fingerprint retrieval returns structural neighbors with wildly different 3D crystal packing energies, introducing noise that degrades performance below the standalone physics baseline.
 
 ---
 
@@ -24,12 +31,12 @@ While molecular machine learning models achieve strong performance on random tra
   <!-- H1: Random Split Inflation (Slate/Gray Container) -->
   <div class="border-b border-border/80 bg-slate-500/10 px-4 py-3.5 sm:px-5 sm:py-4 dark:bg-slate-900/40">
     <div class="mb-1.5 flex items-center gap-2 text-xs font-bold tracking-wider text-slate-600 uppercase dark:text-slate-400">
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
       Hypothesis 1: Random Split Performance Inflation
     </div>
     <div class="text-sm font-medium leading-relaxed text-foreground">
       <p class="mb-1"><strong>Question:</strong> Do standard random cross-validation splits overestimate model performance for molecular lattice energy and melting point prediction?</p>
-      <p><strong class="text-rose-600 dark:text-rose-400">Outcome (Rejected):</strong> <strong>Yes.</strong> Random splits yield an inflated <strong>0.7983 R²</strong> (dH MAE = 1.723 kJ/mol, Tm MAE = 30.50 K). When evaluated on a Bemis-Murcko scaffold-disjoint test set, performance drops to <strong>0.6570 R²</strong>—exposing a <strong>14.1% structural generalization gap</strong> (&Delta;R² = -0.1413).</p>
+      <p><strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong>Yes.</strong> Random splits yield an inflated <strong>0.7983 R²</strong> (dH MAE = 1.723 kJ/mol, Tm MAE = 30.50 K). When evaluated on a Bemis-Murcko scaffold-disjoint test set, performance drops to <strong>0.6570 R²</strong>—exposing a <strong>14.1% structural generalization gap</strong> (&Delta;R² = -0.1413).</p>
     </div>
   </div>
 
@@ -88,8 +95,8 @@ $$
 > The network explicitly incorporates a parameter-initialized target global mean ($\mu_y = 21.46\text{ kJ/mol}$), transforming regression into residual offset learning ($\hat{y} = \mu_y + \Delta y$). This prevents Epoch-1 gradient spikes and enables instant convergence by allowing early epochs to focus directly on learning complex chemical feature interactions rather than fitting baseline energy scales.
 
 > [!WARNING] Evaluation Protocols
-> 1. **RANDOM SPLIT**: Standard 80/20 uniform random partition (In-Distribution baseline).
-> 2. **BEMIS-MURCKO SCAFFOLD SPLIT**: 80/20 core framework disjoint split (Single-fold OOD check).
+> 1. **RANDOM SPLIT**: Standard 70/15/15 (train/val/test) uniform random partition (In-Distribution baseline).
+> 2. **BEMIS-MURCKO SCAFFOLD SPLIT**: 70/15/15 (train/val/test) core framework disjoint split (Single-fold OOD check).
 > 3. **5-FOLD STRATIFIED SCAFFOLD CV**: 5-fold cross-validation with target-quantile stratification across scaffold clusters.
 
 ### Multimodal Feature Extractor Pipeline (2,243 Dimensions)
@@ -144,18 +151,19 @@ To capture both 2D chemical topology and 3D solid-state crystal energetics, the 
 
 ---
 
-## 4. Optimization Dynamics & Epoch-by-Epoch Progress
+## 4. Training Strategy: From Baseline Calibration to Weight Smoothing
 
-Understanding how `LatticePhysicsTower` optimizes over 25 training epochs provides key insight into model stability and structural convergence:
+Understanding how `LatticePhysicsTower` optimizes across training (up to 30–40 epochs with early stopping, patience=10) provides key insight into model stability and structural convergence:
 
 ### Phase 1: Early Epochs (Epochs 1–5) — Baseline Anchoring & Coarse Feature Mapping
 * **Instant Mean Baseline Calibration**: Because predictions are anchored to the target global mean ($\mu_y = 21.46\text{ kJ/mol}$), the network begins Epoch 1 with predictions centered at the dataset average ($\hat{y} \approx \mu_y + 0$). This eliminates initial gradient shocks and enables the network to immediately learn meaningful residual offsets ($\Delta y$).
 * **Primary Structural Signal Learning**: At initial learning rates ($\text{lr} = 10^{-3}$), AdamW rapidly maps high-impact 2D structural features—such as dominant Morgan fingerprint fragments, MACCS functional group keys, and physical properties (MolWt, LogP, TPSA)—to coarse lattice energy corrections.
 
-### Phase 2: Later Epochs (Epochs 6–25) — High-Order Fine-Tuning & Weight Smoothing
+### Phase 2: Later Epochs (Epochs 6–30+) — High-Order Fine-Tuning & Weight Smoothing
 * **Cosine Learning Rate Annealing**: As the Cosine Annealing scheduler smoothly decays the learning rate ($\eta_t \to 10^{-6}$), gradient steps transition from coarse structural mapping to fine-tuning subtle, non-linear interactions—such as 3D conformer PMI geometries ($I_a, I_b, I_c$) and graph symmetry indices.
 * **Huber Loss Outlier Handling**: Smooth Huber Loss ($\delta = 5.0$) acts quadratically ($L_2$) on small residuals while penalizing extreme melting point outliers linearly ($L_1$), preventing rare high-temperature compounds from destabilizing gradient trajectories.
 * **EMA Weight Stabilization**: Exponential Moving Average (EMA decay $\beta = 0.999$) maintains a running shadow copy of network parameters. Final evaluations use EMA shadow weights, filtering out batch-level stochastic variance and boosting test-set stability under scaffold shift.
+* **Early Stopping Patience (Patience=10)**: Training monitors validation RMSE and automatically halts if validation performance does not improve for 10 consecutive epochs, preventing overfitting while ensuring maximum convergence.
 
 ---
 
@@ -163,7 +171,7 @@ Understanding how `LatticePhysicsTower` optimizes over 25 training epochs provid
 
 The performance below summarizes the **Stratified 5-Fold Cross-Validation** and **Random vs. Scaffold Split Comparison** obtained from the experiment execution.
 
-### Consolidated Publication Experimental Summary Table
+### Summary Table
 
 | Experiment / Evaluation Scheme | R² Score | dH MAE (kJ/mol) | nMAE | dH RMSE (kJ/mol) | Tm MAE (K) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -171,7 +179,7 @@ The performance below summarizes the **Stratified 5-Fold Cross-Validation** and 
 | **Random Split (In-Distribution)** | **0.7983** | **1.723** | **0.3315** | **2.334** | **30.50 K** |
 | **Bemis-Murcko Scaffold Split (OOD)** | **0.6570** | **1.793** | **0.4518** | **2.324** | **31.73 K** |
 
-### Detailed Random vs. Scaffold Generalization Gap
+### Random vs. Scaffold Generalization Gap
 
 | Splitting Scheme | R² Score | dH MAE (kJ/mol) | nMAE | Tm MAE (K) |
 | :--- | :---: | :---: | :---: | :---: |
