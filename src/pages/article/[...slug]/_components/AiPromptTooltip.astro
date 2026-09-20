@@ -11,7 +11,7 @@ const encodedPrompt = encodeURIComponent(promptText);
 
 const chatGptUrl = `https://chatgpt.com/?q=${encodedPrompt}`;
 const claudeUrl = `https://claude.ai/new?q=${encodedPrompt}`;
-const geminiUrl = `https://gemini.google.com/app?prompt=${encodedPrompt}`;
+const geminiUrl = `https://gemini.google.com/app`;
 ---
 
 <div class="relative inline-block text-left" id="ai-prompt-wrapper">
@@ -94,9 +94,11 @@ const geminiUrl = `https://gemini.google.com/app?prompt=${encodedPrompt}`;
           Claude
         </a>
         <a
+          id="ai-gemini-link"
           href={geminiUrl}
           target="_blank"
           rel="noopener noreferrer"
+          title="Copies prompt to clipboard and opens Gemini"
           class="rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-[11px] font-medium text-foreground hover:border-blue-500 hover:text-blue-500 transition-colors"
         >
           Gemini
@@ -114,6 +116,7 @@ const geminiUrl = `https://gemini.google.com/app?prompt=${encodedPrompt}`;
     const copyBtn = document.getElementById("ai-copy-btn");
     const copyText = document.getElementById("ai-copy-text");
     const promptContent = document.getElementById("ai-prompt-content");
+    const geminiLink = document.getElementById("ai-gemini-link");
 
     if (!btn || !modal) return;
 
@@ -139,7 +142,7 @@ const geminiUrl = `https://gemini.google.com/app?prompt=${encodedPrompt}`;
       if (e.key === "Escape") closeModal();
     });
 
-    copyBtn?.addEventListener("click", async () => {
+    async function copyToClipboard() {
       if (!promptContent) return;
       await navigator.clipboard.writeText(promptContent.innerText.trim());
       if (copyText) {
@@ -148,6 +151,12 @@ const geminiUrl = `https://gemini.google.com/app?prompt=${encodedPrompt}`;
           copyText.innerText = "Copy Prompt";
         }, 1200);
       }
+    }
+
+    copyBtn?.addEventListener("click", copyToClipboard);
+
+    geminiLink?.addEventListener("click", async () => {
+      await copyToClipboard();
     });
   }
 
