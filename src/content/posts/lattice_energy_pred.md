@@ -78,7 +78,7 @@ $$
 ## 3. The Setup & Model Architecture
 
 > [!NOTE] Preprocessing & Dataset Details
-> Built from 23,496 valid, standardized compounds in the Bradley Open Melting Point Dataset.
+> Built from 23,496 valid, standardized compounds in the [Bradley Open Melting Point Dataset](https://www.kaggle.com/datasets/awguhst/melting-point-dataset).
 > - **Input Feature Dimension:** 2,243 multimodal features
 > - **Target Enthalpy Mean:** $21.46\text{ kJ/mol}$ ($379.8\text{ K}$)
 > - **Loss Function:** Smooth Huber Loss ($\delta = 5.0$)
@@ -188,3 +188,4 @@ The performance below summarizes the **Stratified 5-Fold Cross-Validation** and 
 | Resource | Description | Reference Link |
 | :--- | :--- | :--- |
 | **Executable Kaggle Notebook** | Full executable PyTorch pipeline for feature extraction, model training, and 5-fold scaffold CV | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/latticeenergyprediction/) |
+| **Melting Point Dataset** | Standardized dataset of 23,496 organic compounds with experimental melting points | [Kaggle Dataset](https://www.kaggle.com/datasets/awguhst/melting-point-dataset) |
