@@ -12,7 +12,6 @@ import { toTransitionName } from "@/utils/toTransitionName";
 import EditPost from "./_components/EditPost.astro";
 import ReportButton from "./_components/ReportButton.astro";
 import DownloadPdfButton from "./_components/DownloadPdfButton.astro";
-import ReactionButton from "./_components/ReactionButton.astro";
 import TableOfContents from "./_components/TableOfContents.astro";
 import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
@@ -161,7 +160,6 @@ const ogImage = ogImageUrl
     </ul>
 
     <div class="flex flex-wrap items-center justify-end gap-3">
-      <ReactionButton />
       <DownloadPdfButton />
       <ReportButton postTitle={title} postUrl={Astro.url.href} />
     </div>

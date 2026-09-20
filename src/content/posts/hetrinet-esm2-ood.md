@@ -10,7 +10,7 @@ tags:
   - DisGeNET
   - Drug-Target-Disease Interaction
 description: We benchmark an ESM-2 + Inductive KNN protein language model architecture against traditional 3-mer counting baselines across 4 rigorous OOD splits, demonstrating +39.6% ROC-AUC gains on unseen target proteins and +67.1% on holdout disease categories.
-ogImage: "@/assets/images/model_stability_variance.png"
+ogImage: "@/assets/images/hetrinet-esm2-ood/model_stability_variance.png"
 ---
 
 While drug-target interaction (DTI) models achieve strong performance on random splits (our 3-mer baseline hits **81.90% ROC-AUC** while ESM-2 reaches **97.76%**), traditional sequence baselines crash when deployed against unseen protein targets or novel disease classes. To solve this out-of-distribution (OOD) bottleneck, we benchmark HeTriNet—a heterogeneous graph network combining 150M-parameter ESM-2 protein language embeddings with DisGeNET genetic SVD features—across <mark>single-axis inductive OOD partitions</mark> over 3 independent seed runs.
@@ -93,7 +93,7 @@ where $\mathcal{N}_k(u)$ represents the $k$-nearest neighbors of node $u$ in ESM
 
 ### 1. Baseline Model Architecture (3-Mer Sequence Counting)
 
-![Figure: Baseline HeTriNet Architecture](@/assets/images/baseline_model.png)
+![Figure: Baseline HeTriNet Architecture](@/assets/images/hetrinet-esm2-ood/baseline_model.png)
 *Figure 1: Baseline HeTriNet Architecture using shallow 3-mer sequence count vectors.*
 
 - **Input Featurization**:
@@ -109,7 +109,7 @@ where $\mathcal{N}_k(u)$ represents the $k$-nearest neighbors of node $u$ in ESM
 
 ### 2. Proposed Model Architecture (ESM-2 Embeddings & Inductive k-NN)
 
-![Figure: Proposed HeTriNet Model Architecture & ESM-2 Inductive Pipeline](@/assets/images/model_image.png)
+![Figure: Proposed HeTriNet Model Architecture & ESM-2 Inductive Pipeline](@/assets/images/hetrinet-esm2-ood/model_image.png)
 *Figure 2: Proposed HeTriNet Architecture incorporating 150M-parameter ESM-2 protein language embeddings and inductive k-NN graph propagation.*
 
 - **Input Featurization**:
@@ -153,13 +153,13 @@ The performance below represents the **Mean ± Standard Deviation across 3 indep
 
 ## 5. Benchmark Figures
 
-![Figure 1: OOD Generalization ROC-AUC Profile Across 4 Splits](@/assets/images/roc_auc_comparison.png)
+![Figure 1: OOD Generalization ROC-AUC Profile Across 4 Splits](@/assets/images/hetrinet-esm2-ood/roc_auc_comparison.png)
 *Figure 1: ROC-AUC profile comparison across Random, Drug OOD, Target OOD, and Disease OOD benchmark splits.*
 
-![Figure 2: Disease Memorization Collapse & Validation Loss Trajectories](@/assets/images/ndcg_overfitting_proof.png)
+![Figure 2: Disease Memorization Collapse & Validation Loss Trajectories](@/assets/images/hetrinet-esm2-ood/ndcg_overfitting_proof.png)
 *Figure 2: Epoch-by-epoch training and validation loss trajectories across all 4 OOD splits with early stopping checkpoints.*
 
-![Figure 3: Performance Gap Comparison Between Baseline vs ESM-2](@/assets/images/disease_memorization_collapse.png)
+![Figure 3: Performance Gap Comparison Between Baseline vs ESM-2](@/assets/images/hetrinet-esm2-ood/disease_memorization_collapse.png)
 *Figure 3: Performance comparison highlighting the gap between baseline 3-mer vs proposed ESM-2 model under Disease OOD.*
 *(Note: <mark>F1@0.5 is near-zero because margin ranking loss does not constrain absolute score scale, so the fixed 0.5 threshold is uncalibrated — see ROC-AUC/AUPR for threshold-independent performance.</mark>).*
 
