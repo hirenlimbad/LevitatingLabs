@@ -1,6 +1,6 @@
 ---
 author: Levitating Labs
-pubDatetime: 2026-08-30T12:00:00Z
+pubDatetime: 2026-09-20T12:00:00Z
 title: "Physics-Guided Lattice Energy Prediction with Target-Quantile Scaffold Cross-Validation"
 featured: true
 draft: false
