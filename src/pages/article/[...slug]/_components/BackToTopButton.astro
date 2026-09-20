@@ -1,5 +1,4 @@
 ---
-import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
 import IconArrowNarrowUp from "@/assets/icons/IconArrowNarrowUp.svg";
 import { useTranslations } from "@/i18n";
 
@@ -9,27 +8,25 @@ const t = useTranslations(Astro.currentLocale);
 <div
   id="btt-btn-container"
   class:list={[
-    "fixed inset-e-4 bottom-8 z-50",
-    "md:sticky md:inset-e-auto md:float-end md:me-1",
-    "translate-y-14 opacity-0 transition duration-500",
+    "fixed bottom-8 end-4 md:end-8 md:bottom-8 z-50 pointer-events-none",
+    "translate-y-14 opacity-0 transition duration-300",
   ]}
 >
   <button
     data-button="back-to-top"
     class:list={[
-      "group bg-background relative px-2 py-1",
-      "size-14 rounded-full shadow-xl",
-      "md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none",
-      "md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg",
+      "group bg-background/90 backdrop-blur-md relative flex items-center justify-center gap-2",
+      "size-12 rounded-full shadow-lg border border-border/80 pointer-events-auto cursor-pointer",
+      "hover:border-accent hover:text-accent hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200",
+      "md:h-10 md:w-auto md:px-4 md:rounded-lg",
     ]}
   >
     <span
       id="progress-indicator"
-      class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"
+      class="absolute inset-0 -z-10 block rounded-full bg-transparent md:rounded-lg"
     ></span>
-    <IconArrowLeft class="inline-block rotate-90 md:hidden" />
-    <span class="group-hover:text-accent sr-only text-sm md:not-sr-only">
-      <IconArrowNarrowUp class="inline-block size-4" />
+    <IconArrowNarrowUp class="inline-block size-5 md:size-4" />
+    <span class="group-hover:text-accent sr-only text-sm font-medium md:not-sr-only">
       {t.post.backToTop}
     </span>
   </button>
