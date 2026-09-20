@@ -1,7 +1,7 @@
 ---
 author: Levitating Labs
 pubDatetime: 2026-08-30T12:00:00Z
-title: "From 0.80 to 0.66 R²: How Scaffold Shifts Impact Physics-Guided Lattice Energy Models"
+title: "Physics-Guided Lattice Energy Prediction with Target-Quantile Scaffold Cross-Validation"
 featured: true
 draft: false
 tags:
