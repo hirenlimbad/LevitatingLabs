@@ -17,6 +17,7 @@ import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
 import Comments from "@/components/Comments.astro";
+import AiPromptTooltip from "./_components/AiPromptTooltip.astro";
 import config from "@/config";
 
 export async function getStaticPaths() {
@@ -124,8 +125,10 @@ const ogImage = ogImageUrl
       {title}
     </h1>
 
-    <div class="my-2 flex items-center gap-2">
+    <div class="my-2 flex flex-wrap items-center gap-2">
       <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+      <span aria-hidden="true" class="text-muted-foreground font-light">|</span>
+      <AiPromptTooltip articleTitle={title} articleUrl={Astro.url.href} />
       <span
         aria-hidden="true"
         class:list={[
