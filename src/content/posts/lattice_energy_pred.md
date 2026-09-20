@@ -183,12 +183,8 @@ The performance below summarizes the **Stratified 5-Fold Cross-Validation** and 
 
 ---
 
-## 10. Reproducibility & Artifact Links
+## 10. Reproducibility & Code
 
-| Resource | Description | Path / Reference |
+| Resource | Description | Reference Link |
 | :--- | :--- | :--- |
-| **Primary Pipeline Notebook** | Executable PyTorch code for feature extraction, training, and CV | [`latticeenergyprediction.ipynb`](file:///d-drive/research/work/lattice_energy/latticeenergyprediction.ipynb) |
-| **5-Fold CV Metrics CSV** | Exported metric metrics across all 5 scaffold folds | `artifacts/metrics/scaffold_5fold_cv_metrics.csv` |
-| **Random vs Scaffold CSV** | Comparative metric evaluation export | `artifacts/metrics/random_vs_scaffold_metrics.csv` |
-| **Publication Summary Table** | Consolidated summary markdown table | `artifacts/metrics/publication_summary_table.md` |
-| **Summary Plot Figure** | Master multi-panel publication summary plot | `artifacts/plots/figure_scaffold_cv_summary.png` |
+| **Executable Kaggle Notebook** | Full executable PyTorch pipeline for feature extraction, model training, and 5-fold scaffold CV | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/latticeenergyprediction/) |
