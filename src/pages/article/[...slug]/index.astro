@@ -115,12 +115,12 @@ const ogImage = ogImageUrl
   <main
     id="main-content"
     class:list={["app-layout relative", { "mt-8": !config.features.showBackButton }]}
-    data-pagefind-body
   >
     <TableOfContents {headings} />
     <h1
       style={{ viewTransitionName: toTransitionName(post.id) }}
       class="text-accent inline-block text-2xl font-bold sm:text-3xl"
+      data-pagefind-meta="title"
     >
       {title}
     </h1>
@@ -143,6 +143,7 @@ const ogImage = ogImageUrl
 
     <article
       id="article"
+      data-pagefind-body
       class:list={[
         "mt-8 w-full",
         "app-prose max-w-app",
