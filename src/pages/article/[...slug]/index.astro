@@ -551,7 +551,37 @@ const ogImage = ogImageUrl
     );
   }
 
-  document.addEventListener("astro:after-swap", () =>
-    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
-  );
+  function handleHashScroll() {
+    if (!window.location.hash) return false;
+    try {
+      const hashId = decodeURIComponent(window.location.hash.substring(1));
+      const target = document.getElementById(hashId);
+      if (target) {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+        return true;
+      }
+    } catch (err) {
+      console.warn("Hash scroll error:", err);
+    }
+    return false;
+  }
+
+  if (!window.__hashScrollBound) {
+    window.__hashScrollBound = true;
+    window.addEventListener("hashchange", handleHashScroll);
+  }
+
+  document.addEventListener("astro:after-swap", () => {
+    if (!handleHashScroll()) {
+      window.scrollTo({ left: 0, top: 0, behavior: "instant" });
+    }
+  });
+
+  if (document.readyState === "complete") {
+    handleHashScroll();
+  } else {
+    window.addEventListener("load", handleHashScroll, { once: true });
+  }
 </script>

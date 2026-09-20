@@ -35,8 +35,10 @@
   @apply underline decoration-wavy decoration-2 underline-offset-8;
 }
 
-:target {
-  scroll-margin-block: 1rem;
+:target,
+[id] {
+  scroll-margin-top: 5rem;
+  scroll-margin-block: 5rem;
 }
 
 /* ===== Print & PDF Export Styles ===== */
