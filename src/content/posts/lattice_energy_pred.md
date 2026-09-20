@@ -27,23 +27,23 @@ While molecular machine learning models achieve strong performance on random tra
       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
       Hypothesis 1: Random Split Performance Inflation
     </div>
-    <p class="text-sm font-medium leading-relaxed text-foreground">
-      <strong>Question:</strong> Do standard random cross-validation splits overestimate model performance for molecular lattice energy and melting point prediction?<br/>
-      <strong class="text-rose-600 dark:text-rose-400">Outcome (Rejected):</strong> <strong>Yes.</strong> Random splits yield an inflated <strong>0.7983 R²</strong> (dH MAE = 1.723 kJ/mol, Tm MAE = 30.50 K). When evaluated on a Bemis-Murcko scaffold-disjoint test set, performance drops to <strong>0.6570 R²</strong>—exposing a <strong>14.1% structural generalization gap</strong> ($\Delta R^2 = -0.1413$).
-    </p>
+    <div class="text-sm font-medium leading-relaxed text-foreground">
+      <p class="mb-1"><strong>Question:</strong> Do standard random cross-validation splits overestimate model performance for molecular lattice energy and melting point prediction?</p>
+      <p><strong class="text-rose-600 dark:text-rose-400">Outcome (Rejected):</strong> <strong>Yes.</strong> Random splits yield an inflated <strong>0.7983 R²</strong> (dH MAE = 1.723 kJ/mol, Tm MAE = 30.50 K). When evaluated on a Bemis-Murcko scaffold-disjoint test set, performance drops to <strong>0.6570 R²</strong>—exposing a <strong>14.1% structural generalization gap</strong> (&Delta;R² = -0.1413).</p>
+    </div>
   </div>
 
   <!-- H2: Stratified Scaffold CV & nMAE Stabilization (Teal/Amber Container) -->
   <div class="bg-teal-500/10 px-4 py-3.5 sm:px-5 sm:py-4 dark:bg-teal-950/40">
     <div class="mb-1.5 flex items-center gap-2 text-xs font-bold tracking-wider text-teal-600 uppercase dark:text-teal-400">
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
       Hypothesis 2: Stratified Scaffold Shift & Scale-Invariant Metric Rescue
     </div>
-    <p class="text-sm font-medium leading-relaxed text-foreground">
-      <strong>Question:</strong> Can target-quantile scaffold stratification stabilize 5-fold cross-validation, and how should we evaluate error across chemical families with varying energy distributions?<br/>
-      <strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong class="text-accent">Yes. Target-quantile scaffold bin packing stabilizes 5-fold cross-validation at 0.6215 ± 0.0253 R². Introducing Normalized MAE ($\text{nMAE} = \text{MAE}/\sigma_{y,\text{fold}}$) resolves data geometry artifacts, yielding a scale-invariant error of 0.4729 ± 0.0136 across all scaffold folds.</strong><br/>
-      <strong>Why it worked:</strong> Scaffold groups differ in baseline energy variance ($\sigma_y$). Normalizing MAE by fold standard deviation removes scale distortion, proving that relative model precision remains stable across diverse chemical scaffold topologies.
-    </p>
+    <div class="text-sm font-medium leading-relaxed text-foreground">
+      <p class="mb-1.5"><strong>Question:</strong> Can target-quantile scaffold stratification stabilize 5-fold cross-validation, and how should we evaluate error across chemical families with varying energy distributions?</p>
+      <p class="mb-1.5"><strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong class="text-accent">Yes. Target-quantile scaffold bin packing stabilizes 5-fold cross-validation at 0.6215 &plusmn; 0.0253 R&sup2;. Introducing Normalized MAE (nMAE = MAE / &sigma;<sub>y,fold</sub>) resolves data geometry artifacts, yielding a scale-invariant error of 0.4729 &plusmn; 0.0136 across all scaffold folds.</strong></p>
+      <p><strong>Why it worked:</strong> Scaffold groups differ in baseline energy variance (&sigma;<sub>y</sub>). Normalizing MAE by fold standard deviation removes scale distortion, proving that relative model precision remains stable across diverse chemical scaffold topologies.</p>
+    </div>
   </div>
 </div>
 
@@ -84,34 +84,40 @@ $$
 > - **Loss Function:** Smooth Huber Loss ($\delta = 5.0$)
 > - **Optimizer & Scheduler:** AdamW ($\text{lr}=10^{-3}$, $\text{wd}=10^{-3}$), Cosine Annealing, EMA ($\beta=0.999$)
 
+> [!NOTE] Residual Target Mean Initialization Rationale
+> The network explicitly incorporates a parameter-initialized target global mean ($\mu_y = 21.46\text{ kJ/mol}$), transforming regression into residual offset learning ($\hat{y} = \mu_y + \Delta y$). This prevents Epoch-1 gradient spikes and enables instant convergence by allowing early epochs to focus directly on learning complex chemical feature interactions rather than fitting baseline energy scales.
+
 > [!WARNING] Evaluation Protocols
 > 1. **RANDOM SPLIT**: Standard 80/20 uniform random partition (In-Distribution baseline).
 > 2. **BEMIS-MURCKO SCAFFOLD SPLIT**: 80/20 core framework disjoint split (Single-fold OOD check).
 > 3. **5-FOLD STRATIFIED SCAFFOLD CV**: 5-fold cross-validation with target-quantile stratification across scaffold clusters.
 
-### Model Architecture (`LatticePhysicsTower`)
+### Model Architecture & Subsystem Pipelines
 
-![Figure: Model Architecture & Multimodal Feature Pipeline](@/assets/images/lattice_energy_pred/model_architecture.png)
-*Figure 1: Overview of the LatticePhysicsTower architecture featurizing 2,243-D multimodal molecular vectors.*
+![Figure 1: Overall System Pipeline & Multimodal Feature Engine](@/assets/images/lattice_energy_pred/model_architecture.png)
+*Figure 1: Overall system pipeline featurizing 2,243-D multimodal molecular vectors for lattice enthalpy and melting point prediction.*
 
-- **Input Featurization (2,243 Dimensions)**:
-  - **2,048-bit Morgan Circular Fingerprints ($r=2$)**: Structural fragment presence.
-  - **167-bit MACCS Structural Keys**: Functional group subgraph patterns.
-  - **12 Physical Descriptors**: MolWt, LogP, TPSA, HBD, HBA, Rotatable Bonds, Aromatic Rings, Net Charge.
-  - **4 Topological Symmetry Indices**: Graph automorphism orbits and symmetry metrics.
-  - **4 Crystal Packing Motifs**: H-bond donor/acceptor stoichiometric ratios and rigid ring fractions.
-  - **8 3D Conformer Descriptors**: Principal Moments of Inertia ($I_a, I_b, I_c$), Asymmetry Parameters, and Radius of Gyration computed via ETKDGv3 3D conformers.
-- **Network Processing (`LatticePhysicsTower`)**:
-  - `Linear(2243 -> 64) -> SiLU() -> Dropout(0.2)`
-  - `Linear(64 -> 64) -> SiLU()`
-  - `Linear(64 -> 1) + Global Mean Parameter Initializer (21.46 kJ/mol)`
-- **Optimization & Regularization**:
-  - Trained using Smooth Huber Loss ($\delta = 5.0$) to handle extreme thermal outliers.
-  - Exponential Moving Average (EMA decay $\beta = 0.999$) maintained for evaluation stability.
+![Figure 2: LatticePhysicsTower Neural Network Architecture Zoom-In](@/assets/images/lattice_energy_pred/lattice_tower_architecture.png)
+*Figure 2: Zoom-in view of the LatticePhysicsTower MLP architecture (~148k parameters) with global target mean initialization ($\mu_y = 21.46\text{ kJ/mol}$).*
 
 ---
 
-## 4. Benchmark Performance Results
+## 4. Optimization Dynamics & Epoch-by-Epoch Progress
+
+Understanding how `LatticePhysicsTower` optimizes over 25 training epochs provides key insight into model stability and structural convergence:
+
+### Phase 1: Early Epochs (Epochs 1–5) — Baseline Anchoring & Coarse Feature Mapping
+* **Instant Mean Baseline Calibration**: Because predictions are anchored to the target global mean ($\mu_y = 21.46\text{ kJ/mol}$), the network begins Epoch 1 with predictions centered at the dataset average ($\hat{y} \approx \mu_y + 0$). This eliminates initial gradient shocks and enables the network to immediately learn meaningful residual offsets ($\Delta y$).
+* **Primary Structural Signal Learning**: At initial learning rates ($\text{lr} = 10^{-3}$), AdamW rapidly maps high-impact 2D structural features—such as dominant Morgan fingerprint fragments, MACCS functional group keys, and physical properties (MolWt, LogP, TPSA)—to coarse lattice energy corrections.
+
+### Phase 2: Later Epochs (Epochs 6–25) — High-Order Fine-Tuning & Weight Smoothing
+* **Cosine Learning Rate Annealing**: As the Cosine Annealing scheduler smoothly decays the learning rate ($\eta_t \to 10^{-6}$), gradient steps transition from coarse structural mapping to fine-tuning subtle, non-linear interactions—such as 3D conformer PMI geometries ($I_a, I_b, I_c$) and graph symmetry indices.
+* **Huber Loss Outlier Handling**: Smooth Huber Loss ($\delta = 5.0$) acts quadratically ($L_2$) on small residuals while penalizing extreme melting point outliers linearly ($L_1$), preventing rare high-temperature compounds from destabilizing gradient trajectories.
+* **EMA Weight Stabilization**: Exponential Moving Average (EMA decay $\beta = 0.999$) maintains a running shadow copy of network parameters. Final evaluations use EMA shadow weights, filtering out batch-level stochastic variance and boosting test-set stability under scaffold shift.
+
+---
+
+## 5. Benchmark Performance Results
 
 The performance below summarizes the **Stratified 5-Fold Cross-Validation** and **Random vs. Scaffold Split Comparison** obtained from the experiment execution.
 
@@ -133,20 +139,23 @@ The performance below summarizes the **Stratified 5-Fold Cross-Validation** and 
 
 ---
 
-## 5. Benchmark Figures
+## 6. Benchmark Figures
 
-![Figure 1: Scaffold CV Summary Metrics Across Folds](@/assets/images/lattice_energy_pred/figure_scaffold_cv_summary.png)
-*Figure 1: Summary of R², MAE, nMAE, and RMSE metrics across 5 Stratified Bemis-Murcko Scaffold Folds.*
+![Figure 1: Scaffold Shift Generalization Drop Banner](@/assets/images/lattice_energy_pred/scaffold_shift_summary.png)
+*Figure 1: Generalization penalty under Bemis-Murcko Scaffold Shift comparing R² score and Normalized MAE.*
 
 ![Figure 2: Random vs. Scaffold Parity & Residual Scatter Plots](@/assets/images/lattice_energy_pred/random_vs_scaffold_scatter.png)
 *Figure 2: Parity comparison between In-Distribution Random Split and OOD Scaffold Split predictions.*
 
-![Figure 3: Scale-Invariant nMAE Stability Profile](@/assets/images/lattice_energy_pred/nmae_variance_stability.png)
-*Figure 3: Demonstration of Normalized MAE (nMAE) stability across heterogeneous target standard deviations.*
+![Figure 3: Stratified 5-Fold Scaffold CV Metrics Summary](@/assets/images/lattice_energy_pred/figure_scaffold_cv_summary.png)
+*Figure 3: Summary of R², MAE, nMAE, and RMSE metrics across 5 Stratified Bemis-Murcko Scaffold Folds.*
+
+![Figure 4: Scale-Invariant nMAE Stability Profile](@/assets/images/lattice_energy_pred/nmae_variance_stability.png)
+*Figure 4: Demonstration of Normalized MAE (nMAE) stability across heterogeneous target standard deviations.*
 
 ---
 
-## 6. Findings & Analysis
+## 7. Findings & Analysis
 
 1. **Quantifying the 14.1% OOD Generalization Penalty**: Random train/test splits yield an inflated **0.7983 R²**, whereas holding out core scaffolds drops performance to **0.6570 R²**. Over 14% of random split accuracy stems from memorizing core scaffold topologies rather than learning transferrable physical principles.
 2. **Scale-Invariant Metric Stabilization via nMAE**: Raw MAE varies from $1.78\text{ kJ/mol}$ to $2.78\text{ kJ/mol}$ across folds due to baseline target variance differences ($\sigma_y$). Evaluating via Normalized MAE ($\text{nMAE} = 0.4729 \pm 0.0136$) confirms that relative model error is stable across chemical families.
@@ -154,14 +163,14 @@ The performance below summarizes the **Stratified 5-Fold Cross-Validation** and 
 
 ---
 
-## 7. Limitations
+## 8. Limitations
 
 1. **Single-Component Neutral Solid Limit**: The dataset contains single-component organic compounds. Co-crystals, solvates, and ionic salts exhibit non-covalent lattice energies not covered by standard molecular descriptors.
 2. **Crystal Polymorphism**: Experimental melting points correspond to the thermodynamic room-pressure polymorph; alternative polymorphic forms are not explicitly differentiated in 2D SMILES representations.
 
 ---
 
-## 8. Conclusions & Takeaways
+## 9. Conclusions & Takeaways
 
 1. **Random CV severely underestimates real-world error**: Evaluating on scaffold-disjoint splits is essential for realistic deployment in molecular design.
 2. **Target-Quantile Stratification is mandatory**: Stratifying scaffold bin packing prevents variance imbalance across cross-validation folds.
@@ -169,7 +178,7 @@ The performance below summarizes the **Stratified 5-Fold Cross-Validation** and 
 
 ---
 
-## 9. Reproducibility & Artifact Links
+## 10. Reproducibility & Artifact Links
 
 | Resource | Description | Path / Reference |
 | :--- | :--- | :--- |
