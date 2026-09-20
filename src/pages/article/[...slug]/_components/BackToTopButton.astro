@@ -8,27 +8,20 @@ const t = useTranslations(Astro.currentLocale);
 <div
   id="btt-btn-container"
   class:list={[
-    "fixed bottom-8 end-4 md:end-8 md:bottom-8 z-50 pointer-events-none",
-    "translate-y-14 opacity-0 transition duration-300",
+    "fixed bottom-6 end-6 z-50 pointer-events-none",
+    "translate-y-8 opacity-0 transition duration-300",
   ]}
 >
   <button
     data-button="back-to-top"
+    aria-label={t.post.backToTop}
+    title={t.post.backToTop}
     class:list={[
-      "group bg-background/90 backdrop-blur-md relative flex items-center justify-center gap-2",
-      "size-12 rounded-full shadow-lg border border-border/80 pointer-events-auto cursor-pointer",
-      "hover:border-accent hover:text-accent hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200",
-      "md:h-10 md:w-auto md:px-4 md:rounded-lg",
+      "flex size-10 items-center justify-center rounded-lg border border-border/70 bg-background/80 text-foreground backdrop-blur-sm shadow-xs pointer-events-auto cursor-pointer",
+      "hover:border-accent hover:text-accent transition-colors duration-200",
     ]}
   >
-    <span
-      id="progress-indicator"
-      class="absolute inset-0 -z-10 block rounded-full bg-transparent md:rounded-lg"
-    ></span>
-    <IconArrowNarrowUp class="inline-block size-5 md:size-4" />
-    <span class="group-hover:text-accent sr-only text-sm font-medium md:not-sr-only">
-      {t.post.backToTop}
-    </span>
+    <IconArrowNarrowUp class="size-4" />
   </button>
 </div>
 
@@ -37,34 +30,24 @@ const t = useTranslations(Astro.currentLocale);
     const rootElement = document.documentElement;
     const btnContainer = document.querySelector("#btt-btn-container");
     const backToTopBtn = document.querySelector("[data-button='back-to-top']");
-    const progressIndicator = document.querySelector("#progress-indicator");
 
-    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
-      return;
+    if (!rootElement || !btnContainer || !backToTopBtn) return;
 
     backToTopBtn.addEventListener("click", () => {
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     let lastVisible = null;
     function handleScroll() {
       const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
       const scrollTop = rootElement.scrollTop;
-      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
-
-      progressIndicator.style.setProperty(
-        "background-image",
-        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
-      );
-
-      const isVisible = scrollTop / scrollTotal > 0.3;
+      const isVisible = scrollTotal > 0 && scrollTop / scrollTotal > 0.25;
 
       if (isVisible !== lastVisible) {
         btnContainer.classList.toggle("opacity-100", isVisible);
         btnContainer.classList.toggle("translate-y-0", isVisible);
         btnContainer.classList.toggle("opacity-0", !isVisible);
-        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        btnContainer.classList.toggle("translate-y-8", !isVisible);
         lastVisible = isVisible;
       }
     }
