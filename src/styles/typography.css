@@ -7,8 +7,7 @@
 
   /* ===== Override default Tailwind Typography styles ===== */
   .app-prose {
-    @apply prose max-w-none;
-    max-width: none !important;
+    @apply prose;
 
     h1,
     h2,
