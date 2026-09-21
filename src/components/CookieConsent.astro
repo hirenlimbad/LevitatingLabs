@@ -1,0 +1,89 @@
+---
+---
+<div
+  id="cookie-consent-banner"
+  class="hidden fixed bottom-4 inset-x-4 sm:inset-x-auto sm:end-6 sm:max-w-md z-50 rounded-xl border border-border/80 bg-background/95 p-4 shadow-2xl backdrop-blur-md transition-all duration-300"
+>
+  <div class="flex flex-col gap-3">
+    <div class="flex items-center gap-2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="text-accent min-w-4.5 size-4.5"
+      >
+        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+        <path d="M8.5 8.5v.01"></path>
+        <path d="M16 15.5v.01"></path>
+        <path d="M12 12v.01"></path>
+        <path d="M11 17v.01"></path>
+        <path d="M7 14v.01"></path>
+      </svg>
+      <span class="text-xs font-bold tracking-wider uppercase text-foreground">Cookie & Privacy Preferences</span>
+    </div>
+    <p class="text-xs leading-relaxed text-muted-foreground">
+      We use cookies and Google Analytics to measure site traffic and improve research content. No advertising cookies are collected.
+    </p>
+    <div class="flex items-center justify-end gap-2 pt-1">
+      <button
+        type="button"
+        id="cookie-decline-btn"
+        class="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
+      >
+        Decline
+      </button>
+      <button
+        type="button"
+        id="cookie-accept-btn"
+        class="rounded-lg bg-accent px-3.5 py-1.5 text-xs font-medium text-accent-foreground transition-opacity hover:opacity-90 cursor-pointer"
+      >
+        Accept
+      </button>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  function initCookieConsent() {
+    const banner = document.getElementById("cookie-consent-banner");
+    const acceptBtn = document.getElementById("cookie-accept-btn");
+    const declineBtn = document.getElementById("cookie-decline-btn");
+
+    if (!banner) return;
+
+    const consent = localStorage.getItem("cookie_consent");
+
+    if (!consent) {
+      banner.classList.remove("hidden");
+    }
+
+    acceptBtn?.addEventListener("click", () => {
+      localStorage.setItem("cookie_consent", "accepted");
+      if (typeof window.gtag === "function") {
+        window.gtag("consent", "update", {
+          analytics_storage: "granted"
+        });
+      }
+      banner.classList.add("hidden");
+    });
+
+    declineBtn?.addEventListener("click", () => {
+      localStorage.setItem("cookie_consent", "declined");
+      if (typeof window.gtag === "function") {
+        window.gtag("consent", "update", {
+          analytics_storage: "denied"
+        });
+      }
+      banner.classList.add("hidden");
+    });
+  }
+
+  initCookieConsent();
+  document.addEventListener("astro:after-swap", initCookieConsent);
+</script>

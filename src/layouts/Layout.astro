@@ -4,6 +4,7 @@ import { ClientRouter } from "astro:transitions";
 import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
+import CookieConsent from "@/components/CookieConsent.astro";
 import config from "@/config";
 import "@/styles/global.css";
 
@@ -37,11 +38,25 @@ const rssHref = getRelativeLocaleUrl(
   class="overflow-y-scroll scroll-smooth"
 >
   <head>
-    <!-- Google tag (gtag.js) -->
-    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-SKXZ8ZPXDW"></script>
+    <!-- Google Consent Mode v2 -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+
+      const savedConsent = localStorage.getItem("cookie_consent");
+      const defaultConsent = savedConsent === "accepted" ? "granted" : "denied";
+
+      gtag('consent', 'default', {
+        'analytics_storage': defaultConsent,
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied'
+      });
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-SKXZ8ZPXDW"></script>
+    <script is:inline>
       gtag('js', new Date());
 
       gtag('config', 'G-SKXZ8ZPXDW');
@@ -132,6 +147,7 @@ const rssHref = getRelativeLocaleUrl(
     class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
   >
     <slot />
+    <CookieConsent />
     <script>
       import "@/scripts/theme";
     </script>
