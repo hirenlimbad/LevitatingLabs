@@ -36,20 +36,20 @@ In this work, we benchmark `LatticePhysicsTower`—a physics-guided neural netwo
     </div>
     <div class="text-sm font-medium leading-relaxed text-foreground">
       <p class="mb-1"><strong>Question:</strong> Do standard random cross-validation splits overestimate model performance for molecular lattice energy and melting point prediction?</p>
-      <p><strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong>Yes.</strong> Random splits yield an inflated <strong>0.7983 R²</strong> (dH MAE = 1.723 kJ/mol, Tm MAE = 30.50 K). When evaluated on a Bemis-Murcko scaffold-disjoint test set, performance drops to <strong>0.6570 R²</strong>—exposing a <strong>14.1% structural generalization gap</strong> (&Delta;R² = -0.1413).</p>
+      <p><strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong>Yes.</strong> Random splits yield an inflated <strong>0.7983 R²</strong> (dH MAE = 1.723 kJ/mol, Tm MAE = 30.50 K). When evaluated on a Bemis-Murcko scaffold-disjoint test set, performance drops to <strong>0.6570 R²</strong>—exposing a <strong>14.1% structural generalization gap</strong> (Δ<i>R</i>² = −0.1413).</p>
     </div>
   </div>
 
   <!-- H2: Stratified Scaffold CV & nMAE Stabilization (Teal/Amber Container) -->
   <div class="bg-teal-500/10 px-4 py-3.5 sm:px-5 sm:py-4 dark:bg-teal-950/40">
     <div class="mb-1.5 flex items-center gap-2 text-xs font-bold tracking-wider text-teal-600 uppercase dark:text-teal-400">
-      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
       Hypothesis 2: Stratified Scaffold Shift & Scale-Invariant Metric Rescue
     </div>
     <div class="text-sm font-medium leading-relaxed text-foreground">
       <p class="mb-1.5"><strong>Question:</strong> Can target-quantile scaffold stratification stabilize 5-fold cross-validation, and how should we evaluate error across chemical families with varying energy distributions?</p>
-      <p class="mb-1.5"><strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong class="text-accent">Yes. Target-quantile scaffold bin packing stabilizes 5-fold cross-validation at 0.6215 &plusmn; 0.0253 R&sup2;. Introducing Normalized MAE (nMAE = MAE / &sigma;<sub>y,fold</sub>) resolves data geometry artifacts, yielding a scale-invariant error of 0.4729 &plusmn; 0.0136 across all scaffold folds.</strong></p>
-      <p><strong>Why it worked:</strong> Scaffold groups differ in baseline energy variance (&sigma;<sub>y</sub>). Normalizing MAE by fold standard deviation removes scale distortion, proving that relative model precision remains stable across diverse chemical scaffold topologies.</p>
+      <p class="mb-1.5"><strong class="text-emerald-600 dark:text-emerald-400">Outcome (Confirmed):</strong> <strong class="text-accent">Yes. Target-quantile scaffold bin packing stabilizes 5-fold cross-validation at 0.6215 ± 0.0253 <i>R</i>². Introducing Normalized MAE (nMAE = MAE / σ<sub><i>y</i>,fold</sub>) resolves data geometry artifacts, yielding a scale-invariant error of 0.4729 ± 0.0136 across all scaffold folds.</strong></p>
+      <p><strong>Why it worked:</strong> Scaffold groups differ in baseline energy variance (σ<sub><i>y</i></sub>). Normalizing MAE by fold standard deviation removes scale distortion, proving that relative model precision remains stable across diverse chemical scaffold topologies.</p>
     </div>
   </div>
 </div>
@@ -230,7 +230,7 @@ Below is an honest record of our architectural, data-leakage, and RAG memory gat
       Experiment A1 — Over-Parameterized Deep Funnel MLP (&gt;2M Parameters)
     </div>
     <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> A wide deep funnel MLP (<code>2243 → 512 → 256 → 128 → 64 → 1</code>) with over 2 million trainable parameters, expecting high capacity to capture complex non-linear interactions.</p>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-rose-600 dark:text-rose-400">Why it failed:</strong> Under random splits, the model reached high R² scores. However, on scaffold-disjoint test sets, performance collapsed due to severe scaffold memorization. With ~2M parameters and 23,496 training samples, the network memorized fragment combinations instead of physical principles.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-rose-600 dark:text-rose-400">Why it failed:</strong> Under random splits, the model reached high <i>R</i>² scores. However, on scaffold-disjoint test sets, performance collapsed due to severe scaffold memorization. With ~2M parameters and 23,496 training samples, the network memorized fragment combinations instead of physical principles.</p>
     <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> Model capacity must be calibrated against the count of independent scaffold families. A 148k-parameter bottleneck tower (<code>2243 → 64 → 64 → 1</code>) proved optimal.</p>
   </div>
 
@@ -241,7 +241,7 @@ Below is an honest record of our architectural, data-leakage, and RAG memory gat
       Experiment A2 — Naive Scaffold CV Without Target Stratification
     </div>
     <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Unstratified Bemis-Murcko scaffold cross-validation, assigning scaffold groups to folds arbitrarily.</p>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-orange-600 dark:text-orange-400">Why it failed:</strong> Target energy distributions were wildly imbalanced across folds (e.g., ionic-character aromatic folds vs. aliphatic chain folds), causing severe cross-fold R² variance (±0.08+).</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-orange-600 dark:text-orange-400">Why it failed:</strong> Target energy distributions were wildly imbalanced across folds (e.g., ionic-character aromatic folds vs. aliphatic chain folds), causing severe cross-fold <i>R</i>² variance (±0.08+).</p>
     <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> Target-quantile greedy bin packing is mandatory to ensure every fold spans the complete thermodynamic range of the dataset.</p>
   </div>
 
@@ -251,9 +251,9 @@ Below is an honest record of our architectural, data-leakage, and RAG memory gat
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       Experiment A3 — Evaluation with Raw MAE Only
     </div>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Using raw $\text{MAE}$ (kJ/mol) as the primary cross-fold performance indicator.</p>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-yellow-700 dark:text-yellow-400">Why it failed:</strong> Scaffold families possess different baseline target variances ($\sigma_y$). Raw MAE penalizes high-variance folds unnaturally, conflating data geometry with prediction accuracy.</p>
-    <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> Normalized MAE ($\text{nMAE} = \text{MAE}/\sigma_{y,\text{fold}}$) provides a scale-invariant metric necessary for benchmarking heterogeneous chemical series.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Using raw MAE (kJ/mol) as the primary cross-fold performance indicator.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-yellow-700 dark:text-yellow-400">Why it failed:</strong> Scaffold families possess different baseline target variances (σ<sub><i>y</i></sub>). Raw MAE penalizes high-variance folds unnaturally, conflating data geometry with prediction accuracy.</p>
+    <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> Normalized MAE (nMAE = MAE / σ<sub><i>y</i>,fold</sub>) provides a scale-invariant metric necessary for benchmarking heterogeneous chemical series.</p>
   </div>
 
 </div>
@@ -273,10 +273,10 @@ We benchmarked non-parametric memory retrieval (RAG) over molecular feature bank
   <div class="border-b border-border/80 bg-rose-500/8 px-4 py-4 sm:px-5 dark:bg-rose-950/30">
     <div class="mb-2 flex items-center gap-2 text-xs font-bold tracking-wider text-rose-600 uppercase dark:text-rose-400">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      Experiment B1 — Static FAISS Index & Data Leakage Discovery
+      Experiment B1 — Static FAISS Index &amp; Data Leakage Discovery
     </div>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Built an initial static FAISS memory index over 2,243-D multimodal vectors with a heuristic memory trust gate $g$.</p>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-rose-600 dark:text-rose-400">Outcome:</strong> Reported an initial $R^2 \approx 0.8081$ (vs. $0.7961$ standalone). However, audit revealed <strong>test-set data leakage</strong>: test molecules resided in the un-isolated index. Enforcing strict Bemis-Murcko scaffold isolation dropped true test performance to $R^2 \approx 0.65$.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Built an initial static FAISS memory index over 2,243-D multimodal vectors with a heuristic memory trust gate <i>g</i>.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-rose-600 dark:text-rose-400">Outcome:</strong> Reported an initial <i>R</i>² ≈ 0.8081 (vs. 0.7961 standalone). However, audit revealed <strong>test-set data leakage</strong>: test molecules resided in the un-isolated index. Enforcing strict Bemis-Murcko scaffold isolation dropped true test performance to <i>R</i>² ≈ 0.65.</p>
     <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> RAG memory banks must be strictly isolated to training scaffolds to prevent subtle data leakage in molecular retrieval benchmarks.</p>
   </div>
 
@@ -284,10 +284,10 @@ We benchmarked non-parametric memory retrieval (RAG) over molecular feature bank
   <div class="border-b border-border/80 bg-orange-500/8 px-4 py-4 sm:px-5 dark:bg-orange-950/30">
     <div class="mb-2 flex items-center gap-2 text-xs font-bold tracking-wider text-orange-600 uppercase dark:text-orange-400">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      Experiment B2 — Additive Gate Boosting & Engine Collapse
+      Experiment B2 — Additive Gate Boosting &amp; Engine Collapse
     </div>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Replaced FAISS with a trainable PyTorch GPU retriever and boosted memory trust ($g = g_{\text{learned}} + 0.85 \cdot g_{\text{match}}$).</p>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-orange-600 dark:text-orange-400">Outcome:</strong> Memory trust locked at $g = 1.0$ (100% memory override). This starved the physics engine of target gradients, causing internal engine performance to collapse ($R^2 = 0.2162$). Overall model score dropped to $R^2 = 0.4922$ on novel test scaffolds.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Replaced FAISS with a trainable PyTorch GPU retriever and boosted memory trust (<i>g</i> = <i>g</i><sub>learned</sub> + 0.85 · <i>g</i><sub>match</sub>).</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-orange-600 dark:text-orange-400">Outcome:</strong> Memory trust locked at <i>g</i> = 1.0 (100% memory override). This starved the physics engine of target gradients, causing internal engine performance to collapse (<i>R</i>² = 0.2162). Overall model score dropped to <i>R</i>² = 0.4922 on novel test scaffolds.</p>
     <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> Over-privileging retrieval gates starves the parametric backbone during joint training, destroying fallback capability on novel scaffolds.</p>
   </div>
 
@@ -295,23 +295,23 @@ We benchmarked non-parametric memory retrieval (RAG) over molecular feature bank
   <div class="border-b border-border/80 bg-yellow-500/8 px-4 py-4 sm:px-5 dark:bg-yellow-950/30">
     <div class="mb-2 flex items-center gap-2 text-xs font-bold tracking-wider text-yellow-700 uppercase dark:text-yellow-400">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      Experiment B3 — Soft MoE Mixture ($\alpha$) & Naive Structural Noise Bottleneck
+      Experiment B3 — Soft MoE Mixture (α) &amp; Naive Structural Noise Bottleneck
     </div>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Implemented a Soft Mixture-of-Experts gate ($Y_{\text{final}} = \alpha \cdot y_{\text{rag}} + (1-\alpha) \cdot y_{\text{physics}}$) with binary entropy regularization $-H(\alpha)$ and a tri-partite multi-task loss.</p>
-    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-yellow-700 dark:text-yellow-400">Outcome:</strong> Entropy regularization stabilized blending ($\alpha \approx 0.43$). However, RAG model ($R^2 = 0.6078$) performed <strong>worse than standalone physics ($R^2 = 0.6560$)</strong>. Naive 2D structural similarity retrieves neighbors whose thermodynamic properties differ wildly across scaffold boundaries.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>What we tried:</strong> Implemented a Soft Mixture-of-Experts gate (<i>Y</i><sub>final</sub> = α · <i>y</i><sub>rag</sub> + (1−α) · <i>y</i><sub>physics</sub>) with binary entropy regularization −<i>H</i>(α) and a tri-partite multi-task loss.</p>
+    <p class="mb-1 text-sm leading-relaxed text-foreground"><strong class="text-yellow-700 dark:text-yellow-400">Outcome:</strong> Entropy regularization stabilized blending (α ≈ 0.43). However, RAG model (<i>R</i>² = 0.6078) performed <strong>worse than standalone physics (<i>R</i>² = 0.6560)</strong>. Naive 2D structural similarity retrieves neighbors whose thermodynamic properties differ wildly across scaffold boundaries.</p>
     <p class="text-sm leading-relaxed text-foreground"><strong>Lesson:</strong> Structural similarity (e.g. Morgan fingerprints) does not equal property similarity. Uncalibrated structural retrieval acts as additive noise in lattice energy estimation.</p>
   </div>
 
   <!-- RAG Solution -->
   <div class="bg-emerald-500/8 px-4 py-4 sm:px-5 dark:bg-emerald-950/30">
     <div class="mb-2 flex items-center gap-2 text-xs font-bold tracking-wider text-emerald-600 uppercase dark:text-emerald-400">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
       Solution — 2-Stage Property-Guided Contrastive RAG Pipeline
     </div>
     <p class="mb-1 text-sm leading-relaxed text-foreground"><strong>The Fix:</strong> Decoupled metric learning from downstream regression into a modular 2-stage pipeline:</p>
     <ol class="mb-1.5 list-disc pl-5 text-sm leading-relaxed text-foreground">
-      <li><strong>Stage 1 (Supervised Contrastive Metric Learning):</strong> Pre-train <code>MetricProjectionEncoder</code> using Continuous Supervised Contrastive Loss ($L_{\text{SupCon-Reg}}$) to align metric cosine distance with continuous target property Gaussian distance ($w_{ij} = \exp(-|y_i - y_j|^2 / 2\sigma_y^2)$).</li>
-      <li><strong>Stage 2 (Thermodynamic Prototype Attention):</strong> Extract $K=64$ cluster prototypes $(\mu_c, \bar{Y}_c)$ from property-projected memory space to query dual k-NN property neighbors.</li>
+      <li><strong>Stage 1 (Supervised Contrastive Metric Learning):</strong> Pre-train <code>MetricProjectionEncoder</code> using Continuous Supervised Contrastive Loss (<i>L</i><sub>SupCon-Reg</sub>) to align metric cosine distance with continuous target property Gaussian distance (<i>w<sub>ij</sub></i> = exp(−|<i>y<sub>i</sub></i> − <i>y<sub>j</sub></i>|² / 2σ<sub><i>y</i></sub>²)).</li>
+      <li><strong>Stage 2 (Thermodynamic Prototype Attention):</strong> Extract <i>K</i> = 64 cluster prototypes (μ<sub><i>c</i></sub>, <i>Ȳ<sub>c</sub></i>) from property-projected memory space to query dual k-NN property neighbors.</li>
     </ol>
     <p class="text-sm leading-relaxed text-foreground"><strong>Key Takeaway:</strong> Decoupling contrastive property-metric pre-training eliminates gradient interference and guarantees retrieved memory neighbors are thermodynamically aligned, turning RAG into a reliable prior.</p>
   </div>
