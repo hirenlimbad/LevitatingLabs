@@ -21,6 +21,27 @@ import {
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import config from "./astro-paper.config";
 
+function rehypeIgnoreKatexMathml() {
+  return (tree: any) => {
+    function visit(node: any) {
+      if (node.type === "element" && node.properties) {
+        const className = node.properties.className;
+        if (
+          (Array.isArray(className) && className.includes("katex-mathml")) ||
+          node.tagName === "annotation" ||
+          node.tagName === "semantics"
+        ) {
+          node.properties["data-pagefind-ignore"] = "";
+        }
+      }
+      if (node.children && Array.isArray(node.children)) {
+        node.children.forEach(visit);
+      }
+    }
+    visit(tree);
+  };
+}
+
 export default defineConfig({
   site: config.site.url,
   base: "/LevitatingLabs",
@@ -45,7 +66,7 @@ export default defineConfig({
         remarkToc,
         [remarkCollapse, { test: "Table of contents" }],
       ],
-      rehypePlugins: [rehypeCallouts, rehypeKatex],
+      rehypePlugins: [rehypeCallouts, rehypeKatex, rehypeIgnoreKatexMathml],
     }),
     shikiConfig: {
       themes: { light: "min-light", dark: "night-owl" },

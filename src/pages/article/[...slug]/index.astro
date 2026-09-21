@@ -128,7 +128,7 @@ const readingTime = getReadingTime(post.body ?? "");
       {title}
     </h1>
 
-    <div class="my-2 flex flex-wrap items-center gap-2">
+    <div data-pagefind-ignore class="my-2 flex flex-wrap items-center gap-2">
       <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
       <span aria-hidden="true" class="text-muted-foreground font-light">|</span>
       <div class="text-muted-foreground flex items-center gap-1.5 text-sm sm:text-base font-medium" title={`${readingTime.wordCount} words`}>

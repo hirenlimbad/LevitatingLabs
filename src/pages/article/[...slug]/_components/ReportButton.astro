@@ -12,6 +12,7 @@ const formspreeEndpoint = "https://formspree.io/f/xaeyyner";
 <button
   type="button"
   id="open-report-modal-btn"
+  data-pagefind-ignore
   class="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-accent/5 px-3.5 py-1.5 text-xs text-muted-foreground transition-all hover:border-accent hover:bg-accent/10 hover:text-accent focus-outline cursor-pointer"
   title="Report a discrepancy or send feedback about this post"
 >
@@ -36,6 +37,7 @@ const formspreeEndpoint = "https://formspree.io/f/xaeyyner";
 <!-- Modal Backdrop & Popup -->
 <div
   id="report-modal"
+  data-pagefind-ignore
   class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
   role="dialog"
   aria-modal="true"

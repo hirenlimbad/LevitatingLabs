@@ -93,7 +93,48 @@ const t = useTranslations(locale);
           const formatExcerpt = (text: string) => {
             if (!text) return text;
             return text
-              .replace(/`([^`]+)`/g, '<code class="search-code">$1</code>')
+              // Strip callout tags & headers
+              .replace(/\[!(NOTE|IMPORTANT|WARNING|TIP|CAUTION)\]/gi, "")
+              .replace(/^>\s*/gm, "")
+
+              // Clean up raw TeX / KaTeX math commands if indexed
+              .replace(/\\text\s*\{([^}]+)\}/g, "$1")
+              .replace(/\\mathrm\s*\{([^}]+)\}/g, "$1")
+              .replace(/\\mathbf\s*\{([^}]+)\}/g, "$1")
+              .replace(/\\mathcal\s*\{([^}]+)\}/g, "$1")
+              .replace(/\\Delta/g, "Δ")
+              .replace(/\\sigma/g, "σ")
+              .replace(/\\alpha/g, "α")
+              .replace(/\\beta/g, "β")
+              .replace(/\\mu/g, "μ")
+              .replace(/\\pi/g, "π")
+              .replace(/\\eta/g, "η")
+              .replace(/\\delta/g, "δ")
+              .replace(/\\epsilon/g, "ε")
+              .replace(/\\approx/g, "≈")
+              .replace(/\\pm/g, "±")
+              .replace(/\\cdot/g, "·")
+              .replace(/\\ge/g, "≥")
+              .replace(/\\le/g, "≤")
+              .replace(/\\neq/g, "≠")
+              .replace(/\\to/g, "→")
+              .replace(/\\in/g, "∈")
+              .replace(/\\notin/g, "∉")
+              .replace(/\\cap/g, "∩")
+              .replace(/\\cup/g, "∪")
+              .replace(/\\infty/g, "∞")
+              .replace(/\\forall/g, "∀")
+              .replace(/\\exists/g, "∃")
+              .replace(/\\sqrt\s*\{([^}]+)\}/g, "√($1)")
+              .replace(/\\frac\s*\{([^}]+)\}\s*\{([^}]+)\}/g, "$1/$2")
+              .replace(/\\\{/g, "{")
+              .replace(/\\\}/g, "}")
+              .replace(/\\\$/g, "$")
+              .replace(/\$+/g, "")
+
+              // Format code & bold / italic markdown
+              .replace(/`([^`\n]+)`/g, '<code class="search-code">$1</code>')
+              .replace(/`/g, "")
               .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
               .replace(/\*([^*]+)\*/g, "<em>$1</em>");
           };

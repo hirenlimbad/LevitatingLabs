@@ -42,6 +42,7 @@ const groupedHeadings = groupHeadings(headings);
       <button
         id="toc-show-btn"
         type="button"
+        data-pagefind-ignore
         title="Show Table of Contents"
         aria-label="Show Table of Contents"
         class="hidden xl:hidden-when-open fixed top-28 end-6 z-40 items-center gap-1.5 rounded-lg border border-border/80 bg-background/90 text-accent backdrop-blur-md px-3 py-1.5 text-xs font-mono font-bold shadow-lg hover:border-accent hover:bg-accent/10 transition-all cursor-pointer"
@@ -52,6 +53,7 @@ const groupedHeadings = groupHeadings(headings);
 
       <aside
         id="toc-sidebar"
+        data-pagefind-ignore
         class="hidden xl:block fixed top-32 left-[calc(50%+25.5rem)] w-80 select-none z-30 transition-opacity duration-200"
         aria-label="Table of Contents"
       >
