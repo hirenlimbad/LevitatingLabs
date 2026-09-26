@@ -531,12 +531,24 @@ const groupedHeadings = groupHeadings(headings);
       }
     }
 
+    let isManualScroll = false;
+    let manualScrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function setManualScrollLock() {
+      isManualScroll = true;
+      if (manualScrollTimer !== null) clearTimeout(manualScrollTimer);
+      manualScrollTimer = setTimeout(() => {
+        isManualScroll = false;
+      }, 1000);
+    }
+
     const observerOptions: IntersectionObserverInit = {
       rootMargin: "-90px 0px -70% 0px",
       threshold: 0,
     };
 
     const observer = new IntersectionObserver(entries => {
+      if (isManualScroll) return;
       for (const entry of entries) {
         if (entry.isIntersecting) {
           const id = entry.target.getAttribute("id");
@@ -551,6 +563,7 @@ const groupedHeadings = groupHeadings(headings);
 
     tocLinks.forEach(link => {
       link.addEventListener("click", () => {
+        setManualScrollLock();
         const slug = link.getAttribute("data-slug");
         const parentSlug = link.getAttribute("data-parent-slug");
         if (slug) {
