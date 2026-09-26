@@ -83,14 +83,7 @@ const isActive = (path: string) => {
             {t.nav.posts}
           </a>
         </li>
-        <li class="col-span-2">
-          <a
-            href={getRelativeLocaleUrl(locale, "threads")}
-            class:list={{ "active-nav": isActive("/threads") }}
-          >
-            {t.nav.threads}
-          </a>
-        </li>
+
         <li class="col-span-2">
           <a
             href={getRelativeLocaleUrl(locale, "tags")}
