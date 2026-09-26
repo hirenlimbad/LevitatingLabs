@@ -34,4 +34,24 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { posts, pages };
+const threads = defineCollection({
+  loader: glob({ pattern: "**/[^_]*.{md,mdx}", base: "./src/content/threads" }),
+  schema: ({ image }) =>
+    z.object({
+      author: z.string().default(config.site.author),
+      pubDatetime: z.coerce.date(),
+      modDatetime: z.coerce.date().optional().nullable(),
+      title: z.string(),
+      status: z
+        .enum(["in-progress", "checkpoint-reached", "completed", "archived"])
+        .default("in-progress"),
+      description: z.string(),
+      tags: z.array(z.string()).default(["experiment"]),
+      relatedArticle: z.string().optional().nullable(),
+      featured: z.boolean().optional(),
+      draft: z.boolean().optional(),
+      ogImage: image().or(z.string()).optional(),
+    }),
+});
+
+export const collections = { posts, pages, threads };

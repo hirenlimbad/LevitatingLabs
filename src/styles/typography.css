@@ -6,7 +6,8 @@
   }
 
   /* ===== Override default Tailwind Typography styles ===== */
-  .app-prose {
+  .app-prose,
+  .thread-content {
     @apply prose;
 
     h1,
@@ -175,5 +176,46 @@
   .katex * {
     color: inherit !important;
     border-color: var(--foreground) !important;
+  }
+
+  /* ===== Premium Thread Timeline Content ===== */
+  .thread-content {
+    @apply relative pl-6 sm:pl-8 space-y-6 text-foreground/90;
+
+    h2 {
+      @apply text-lg sm:text-xl font-bold tracking-tight text-foreground mt-10 mb-3 flex items-center gap-2.5 relative;
+
+      /* Glowing Node Marker */
+      &::before {
+        content: "";
+        @apply absolute -left-[1.85rem] sm:-left-[2.35rem] top-1/2 -translate-y-1/2 size-3.5 rounded-full bg-accent ring-4 ring-background shadow-2xs;
+      }
+    }
+
+    /* Sub-timestamp directly underneath post h2 headers */
+    h2 + p > em:only-child,
+    h2 + p > em {
+      @apply block text-xs font-medium text-muted-foreground not-italic -mt-2 mb-3;
+    }
+
+    p {
+      @apply leading-relaxed my-3 text-sm sm:text-base text-foreground/90;
+    }
+
+    ul, ol {
+      @apply my-3 space-y-1.5 pl-4 text-sm sm:text-base;
+    }
+
+    li {
+      @apply marker:text-accent font-normal;
+    }
+
+    pre {
+      @apply rounded-2xl border border-border/80 bg-muted/40 p-4 shadow-2xs text-xs sm:text-sm my-5 overflow-x-auto;
+    }
+
+    blockquote {
+      @apply border-l-4 border-accent/80 bg-accent/5 px-4 py-3 rounded-r-xl my-5 italic text-sm sm:text-base text-foreground/90 shadow-2xs;
+    }
   }
 }

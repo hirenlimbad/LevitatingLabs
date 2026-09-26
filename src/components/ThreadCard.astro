@@ -1,0 +1,50 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import Datetime from "./Datetime.astro";
+import ThreadStatusBadge from "./ThreadStatusBadge.astro";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import config from "@/config";
+
+export interface Props {
+  thread: CollectionEntry<"threads">;
+}
+
+const { thread } = Astro.props;
+const { data, id } = thread;
+const locale = Astro.currentLocale ?? config.site.lang;
+
+const threadUrl = getRelativeLocaleUrl(locale, `threads/${id}`);
+const articleUrl = data.relatedArticle
+  ? getRelativeLocaleUrl(locale, `article/${data.relatedArticle}`)
+  : null;
+---
+
+<li class="py-5 border-b border-border/50 last:border-b-0 space-y-2 group transition-colors">
+  <h3 class="text-base sm:text-lg font-bold tracking-tight text-foreground inline-flex flex-wrap items-center gap-2">
+    <a href={threadUrl} class="focus-outline hover:underline group-hover:text-accent transition-colors">
+      {data.title}
+    </a>
+    <ThreadStatusBadge status={data.status} size="sm" />
+  </h3>
+
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+    <Datetime pubDatetime={data.pubDatetime} modDatetime={data.modDatetime} size="sm" />
+  </div>
+
+  <p class="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+    {data.description}
+  </p>
+
+  {articleUrl && (data.status === "checkpoint-reached" || data.status === "completed") && (
+    <div class="pt-1">
+      <a
+        href={articleUrl}
+        class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+      >
+        <span>Read Published Article</span>
+        <IconArrowRight class="size-3" />
+      </a>
+    </div>
+  )}
+</li>

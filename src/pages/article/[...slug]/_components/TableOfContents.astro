@@ -38,7 +38,160 @@ const groupedHeadings = groupHeadings(headings);
 {
   groupedHeadings.length > 0 && (
     <>
-      <!-- Floating Unhide Button (Shown when TOC is hidden) -->
+      <!-- Mobile Floating Chip Attached to Bottom-Right (Hamburger Icon Only) -->
+      <button
+        id="toc-mobile-chip"
+        type="button"
+        data-pagefind-ignore
+        title="Open Table of Contents"
+        aria-label="Open Table of Contents"
+        class="xl:hidden fixed bottom-24 right-0 z-30 flex items-center justify-center rounded-l-xl border border-r-0 border-border/80 bg-background/95 text-accent backdrop-blur-md p-2.5 pl-3 shadow-xl hover:border-accent hover:-translate-x-0.5 transition-all cursor-pointer group"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="size-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="18" x2="20" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Mobile Right Slide-Over Backdrop -->
+      <div
+        id="toc-mobile-backdrop"
+        class="xl:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] opacity-0 pointer-events-none transition-opacity duration-300"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Mobile Right Slide-Over Drawer -->
+      <aside
+        id="toc-mobile-drawer"
+        data-pagefind-ignore
+        class="xl:hidden fixed inset-y-0 right-0 z-[70] w-80 max-w-[85vw] bg-background/95 dark:bg-background/95 backdrop-blur-xl border-s border-border/80 shadow-2xl transition-transform duration-300 ease-out transform translate-x-full flex flex-col"
+        aria-label="Mobile Table of Contents"
+      >
+        <!-- Mobile Drawer Header -->
+        <div class="px-5 py-4 border-b border-border/60 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+              // IN THIS ARTICLE
+            </span>
+            <span class="font-mono text-xs font-bold text-accent">
+              [{groupedHeadings.length}]
+            </span>
+          </div>
+          <button
+            id="toc-mobile-close"
+            type="button"
+            title="Close Table of Contents"
+            aria-label="Close Table of Contents"
+            class="size-8 rounded-lg border border-border/60 flex items-center justify-center font-mono text-xs font-bold text-muted-foreground hover:text-accent hover:border-accent/80 cursor-pointer transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Mobile Drawer Content -->
+        <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+          <nav>
+            <ul class="space-y-2.5 w-full">
+              {groupedHeadings.map(({ h2, children }) => (
+                <li class="toc-group group w-full min-w-0" data-group-slug={h2.slug}>
+                  <a
+                    href={`#${h2.slug}`}
+                    title={h2.text}
+                    class="toc-link toc-h2 flex items-center justify-between w-full min-w-0 py-1 text-sm font-bold leading-snug text-foreground/85 hover:text-accent transition-colors focus:outline-none"
+                    data-slug={h2.slug}
+                    data-parent-slug={h2.slug}
+                  >
+                    <span class="truncate min-w-0 block flex-1">{h2.text}</span>
+                  </a>
+
+                  {children.length > 0 && (
+                    <ul class="toc-children hidden mt-1.5 space-y-1.5 ps-3 border-s-2 border-border/60 ms-1 w-full min-w-0">
+                      {children.map(child => (
+                        <li class="w-full min-w-0">
+                          <a
+                            href={`#${child.slug}`}
+                            title={child.text}
+                            class="toc-link toc-h3 block w-full min-w-0 py-0.5 text-xs font-semibold leading-relaxed text-muted-foreground hover:text-accent transition-colors focus:outline-none"
+                            data-slug={child.slug}
+                            data-parent-slug={h2.slug}
+                          >
+                            <span class="truncate min-w-0 block">{child.text}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <!-- Mobile Figures Section -->
+          <div id="toc-mobile-figures-section" class="border-t border-border/60 pt-3.5 hidden">
+            <button
+              id="toc-mobile-figures-toggle"
+              type="button"
+              class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
+              aria-expanded="false"
+            >
+              <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+                // FIGURES
+              </span>
+              <div class="flex items-center gap-1.5 font-mono text-xs">
+                <span id="toc-mobile-figures-count" class="font-bold text-accent">[0]</span>
+                <span id="toc-mobile-figures-chevron" class="text-accent font-black text-sm">+</span>
+              </div>
+            </button>
+
+            <ul id="toc-mobile-figures-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
+              <!-- Populated dynamically -->
+            </ul>
+          </div>
+
+          <!-- Mobile Artifacts Section -->
+          <div id="toc-mobile-artifacts-section" class="border-t border-border/60 pt-3.5 hidden">
+            <button
+              id="toc-mobile-artifacts-toggle"
+              type="button"
+              class="flex w-full items-center justify-between text-left focus:outline-none cursor-pointer py-0.5 hover:text-accent transition-colors"
+              aria-expanded="false"
+            >
+              <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
+                // ARTIFACTS
+              </span>
+              <div class="flex items-center gap-1.5 font-mono text-xs">
+                <span id="toc-mobile-artifacts-count" class="font-bold text-accent">[0]</span>
+                <span id="toc-mobile-artifacts-chevron" class="text-accent font-black text-sm">+</span>
+              </div>
+            </button>
+
+            <ul id="toc-mobile-artifacts-list" class="mt-2 space-y-1.5 w-full min-w-0 hidden">
+              <!-- Populated dynamically -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Mobile Drawer Bottom Auto-Close Indicator -->
+        <div
+          id="toc-mobile-autoclose-bar"
+          class="hidden px-5 py-3 border-t border-border/60 bg-muted/40 backdrop-blur-sm flex items-center justify-between text-xs font-mono shrink-0 transition-all"
+        >
+          <div class="flex items-center gap-2 text-muted-foreground">
+            <span class="inline-block size-2 rounded-full bg-accent animate-pulse"></span>
+            <span>Navigating... Closing in <strong id="toc-autoclose-seconds" class="text-accent font-black">3s</strong></span>
+          </div>
+          <button
+            id="toc-autoclose-cancel"
+            type="button"
+            class="text-[11px] font-bold text-muted-foreground hover:text-accent underline underline-offset-2 cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+      </aside>
+
+      <!-- Desktop Floating Unhide Button (Shown when TOC is hidden on desktop) -->
       <button
         id="toc-show-btn"
         type="button"
@@ -51,6 +204,7 @@ const groupedHeadings = groupHeadings(headings);
         <span class="text-[10px] font-mono text-muted-foreground">[{groupedHeadings.length}]</span>
       </button>
 
+      <!-- Desktop Sidebar -->
       <aside
         id="toc-sidebar"
         data-pagefind-ignore
@@ -165,6 +319,123 @@ const groupedHeadings = groupHeadings(headings);
 }
 
 <script>
+  let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  let autoCloseInterval: ReturnType<typeof setInterval> | null = null;
+  let remainingSeconds = 3;
+
+  function clearAutoCloseTimer() {
+    if (autoCloseTimer !== null) {
+      clearTimeout(autoCloseTimer);
+      autoCloseTimer = null;
+    }
+    if (autoCloseInterval !== null) {
+      clearInterval(autoCloseInterval);
+      autoCloseInterval = null;
+    }
+    const bar = document.getElementById("toc-mobile-autoclose-bar");
+    if (bar) bar.classList.add("hidden");
+  }
+
+  function startAutoCloseTimer() {
+    clearAutoCloseTimer();
+
+    remainingSeconds = 3;
+    const bar = document.getElementById("toc-mobile-autoclose-bar");
+    const secondsEl = document.getElementById("toc-autoclose-seconds");
+    const cancelBtn = document.getElementById("toc-autoclose-cancel");
+
+    if (bar && secondsEl) {
+      secondsEl.textContent = `${remainingSeconds}s`;
+      bar.classList.remove("hidden");
+
+      if (cancelBtn) {
+        cancelBtn.onclick = (e) => {
+          e.preventDefault();
+          clearAutoCloseTimer();
+        };
+      }
+    }
+
+    autoCloseInterval = setInterval(() => {
+      remainingSeconds -= 1;
+      if (secondsEl) {
+        secondsEl.textContent = `${Math.max(remainingSeconds, 0)}s`;
+      }
+    }, 1000);
+
+    autoCloseTimer = setTimeout(() => {
+      clearAutoCloseTimer();
+      closeMobileDrawer();
+    }, 3000);
+  }
+
+  function closeMobileDrawer() {
+    clearAutoCloseTimer();
+    const drawer = document.getElementById("toc-mobile-drawer");
+    const backdrop = document.getElementById("toc-mobile-backdrop");
+    if (!drawer || !backdrop) return;
+    drawer.classList.add("translate-x-full");
+    backdrop.classList.add("opacity-0", "pointer-events-none");
+    document.body.style.overflow = "";
+  }
+
+  function openMobileDrawer() {
+    const drawer = document.getElementById("toc-mobile-drawer");
+    const backdrop = document.getElementById("toc-mobile-backdrop");
+    if (!drawer || !backdrop) return;
+    drawer.classList.remove("translate-x-full");
+    backdrop.classList.remove("opacity-0", "pointer-events-none");
+    document.body.style.overflow = "hidden";
+  }
+
+  function setupMobileDrawer() {
+    const chip = document.getElementById("toc-mobile-chip");
+    const closeBtn = document.getElementById("toc-mobile-close");
+    const backdrop = document.getElementById("toc-mobile-backdrop");
+    const drawer = document.getElementById("toc-mobile-drawer");
+
+    if (!chip || !drawer || !backdrop) return;
+
+    chip.onclick = (e) => {
+      e.preventDefault();
+      openMobileDrawer();
+    };
+
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        e.preventDefault();
+        closeMobileDrawer();
+      };
+    }
+
+    backdrop.onclick = (e) => {
+      e.preventDefault();
+      closeMobileDrawer();
+    };
+
+    const links = drawer.querySelectorAll<HTMLAnchorElement>("a");
+    links.forEach(link => {
+      link.addEventListener("click", () => {
+        // Expand the group if it's an H2 or parent link
+        const parentSlug = link.getAttribute("data-parent-slug") || link.getAttribute("data-slug");
+        if (parentSlug) {
+          const group = drawer.querySelector<HTMLElement>(`.toc-group[data-group-slug="${parentSlug}"]`);
+          const childrenList = group?.querySelector(".toc-children");
+          childrenList?.classList.remove("hidden");
+        }
+
+        // Start / Reset auto-close timer countdown
+        startAutoCloseTimer();
+      });
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeMobileDrawer();
+      }
+    });
+  }
+
   function setupTocToggle() {
     const sidebar = document.getElementById("toc-sidebar");
     const hideBtn = document.getElementById("toc-hide-btn");
@@ -212,7 +483,6 @@ const groupedHeadings = groupHeadings(headings);
     const tocGroups = document.querySelectorAll<HTMLElement>(".toc-group");
     if (!tocLinks.length) return;
 
-    // Collect heading elements
     const headingElsMap = new Map<string, HTMLElement>();
     tocLinks.forEach(link => {
       const slug = link.getAttribute("data-slug");
@@ -279,7 +549,6 @@ const groupedHeadings = groupHeadings(headings);
 
     headingElsMap.forEach(el => observer.observe(el));
 
-    // Click handler for immediate feedback
     tocLinks.forEach(link => {
       link.addEventListener("click", () => {
         const slug = link.getAttribute("data-slug");
@@ -296,85 +565,101 @@ const groupedHeadings = groupHeadings(headings);
 
   function setupFiguresNav() {
     const article = document.getElementById("article");
-    const figuresSection = document.getElementById("toc-figures-section");
-    const figuresList = document.getElementById("toc-figures-list");
-    const figuresCount = document.getElementById("toc-figures-count");
-    const figuresToggle = document.getElementById("toc-figures-toggle");
-    const figuresChevron = document.getElementById("toc-figures-chevron");
-    if (!article || !figuresSection || !figuresList || !figuresCount || !figuresToggle || !figuresChevron) return;
+    if (!article) return;
 
-    figuresList.innerHTML = "";
     const images = Array.from(article.querySelectorAll<HTMLImageElement>("img"));
     
+    const desktopSection = document.getElementById("toc-figures-section");
+    const desktopList = document.getElementById("toc-figures-list");
+    const desktopCount = document.getElementById("toc-figures-count");
+    const desktopToggle = document.getElementById("toc-figures-toggle");
+    const desktopChevron = document.getElementById("toc-figures-chevron");
+
+    const mobileSection = document.getElementById("toc-mobile-figures-section");
+    const mobileList = document.getElementById("toc-mobile-figures-list");
+    const mobileCount = document.getElementById("toc-mobile-figures-count");
+    const mobileToggle = document.getElementById("toc-mobile-figures-toggle");
+    const mobileChevron = document.getElementById("toc-mobile-figures-chevron");
+
     if (images.length === 0) {
-      figuresSection.classList.add("hidden");
+      desktopSection?.classList.add("hidden");
+      mobileSection?.classList.add("hidden");
       return;
     }
 
-    figuresCount.textContent = `[${images.length}]`;
+    if (desktopCount) desktopCount.textContent = `[${images.length}]`;
+    if (mobileCount) mobileCount.textContent = `[${images.length}]`;
 
-    images.forEach((img, index) => {
-      const figNum = index + 1;
-      const figId = img.id || `article-figure-${figNum}`;
-      img.id = figId;
+    const renderItems = (container: HTMLElement | null, isMobile: boolean) => {
+      if (!container) return;
+      container.innerHTML = "";
+      images.forEach((img, index) => {
+        const figNum = index + 1;
+        const figId = img.id || `article-figure-${figNum}`;
+        img.id = figId;
 
-      const alt = img.getAttribute("alt") || "";
-      const caption = alt || `Figure ${figNum}`;
+        const alt = img.getAttribute("alt") || "";
+        const caption = alt || `Figure ${figNum}`;
 
-      const li = document.createElement("li");
-      li.className = "w-full min-w-0";
+        const li = document.createElement("li");
+        li.className = "w-full min-w-0";
 
-      const a = document.createElement("a");
-      a.href = `#${figId}`;
-      a.title = caption;
-      a.className = "toc-figure-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+        const a = document.createElement("a");
+        a.href = `#${figId}`;
+        a.title = caption;
+        a.className = "toc-figure-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
 
-      a.innerHTML = `
-        <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${figNum}</span>
-        <span class="truncate min-w-0 block flex-1 font-semibold">${caption}</span>
-      `;
+        a.innerHTML = `
+          <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${figNum}</span>
+          <span class="truncate min-w-0 block flex-1 font-semibold">${caption}</span>
+        `;
 
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        img.scrollIntoView({ behavior: "smooth", block: "center" });
-        img.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
-        setTimeout(() => img.classList.remove("ring-2", "ring-accent"), 2000);
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          img.scrollIntoView({ behavior: "smooth", block: "center" });
+          img.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
+          setTimeout(() => img.classList.remove("ring-2", "ring-accent"), 2000);
+          if (isMobile) {
+            startAutoCloseTimer();
+          }
+        });
+
+        li.appendChild(a);
+        container.appendChild(li);
       });
-
-      li.appendChild(a);
-      figuresList.appendChild(li);
-    });
-
-    // Collapsible toggle functionality (+ / -)
-    figuresToggle.onclick = (e) => {
-      e.preventDefault();
-      const isExpanded = figuresToggle.getAttribute("aria-expanded") === "true";
-      if (isExpanded) {
-        figuresList.classList.add("hidden");
-        figuresChevron.textContent = "+";
-        figuresToggle.setAttribute("aria-expanded", "false");
-      } else {
-        figuresList.classList.remove("hidden");
-        figuresChevron.textContent = "−";
-        figuresToggle.setAttribute("aria-expanded", "true");
-      }
     };
 
-    figuresSection.classList.remove("hidden");
+    renderItems(desktopList, false);
+    renderItems(mobileList, true);
+
+    const setupToggle = (toggleBtn: HTMLElement | null, listEl: HTMLElement | null, chevronEl: HTMLElement | null) => {
+      if (!toggleBtn || !listEl || !chevronEl) return;
+      toggleBtn.onclick = (e) => {
+        e.preventDefault();
+        const isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+        if (isExpanded) {
+          listEl.classList.add("hidden");
+          chevronEl.textContent = "+";
+          toggleBtn.setAttribute("aria-expanded", "false");
+        } else {
+          listEl.classList.remove("hidden");
+          chevronEl.textContent = "−";
+          toggleBtn.setAttribute("aria-expanded", "true");
+        }
+      };
+    };
+
+    setupToggle(desktopToggle, desktopList, desktopChevron);
+    setupToggle(mobileToggle, mobileList, mobileChevron);
+
+    desktopSection?.classList.remove("hidden");
+    mobileSection?.classList.remove("hidden");
   }
 
   function setupArtifactsNav() {
     const article = document.getElementById("article");
-    const artifactsSection = document.getElementById("toc-artifacts-section");
-    const artifactsList = document.getElementById("toc-artifacts-list");
-    const artifactsCount = document.getElementById("toc-artifacts-count");
-    const artifactsToggle = document.getElementById("toc-artifacts-toggle");
-    const artifactsChevron = document.getElementById("toc-artifacts-chevron");
-    if (!article || !artifactsSection || !artifactsList || !artifactsCount || !artifactsToggle || !artifactsChevron) return;
+    if (!article) return;
 
-    artifactsList.innerHTML = "";
-    
-    // Find all external resource/code/dataset links inside the article
     const anchorTags = Array.from(article.querySelectorAll<HTMLAnchorElement>("a[href]"));
     
     const artifactLinks = anchorTags.filter(a => {
@@ -389,7 +674,6 @@ const groupedHeadings = groupHeadings(headings);
       return isExternalResource && text.length > 0;
     });
 
-    // Deduplicate by href
     const uniqueArtifactsMap = new Map<string, { href: string; text: string }>();
     artifactLinks.forEach(a => {
       if (!uniqueArtifactsMap.has(a.href)) {
@@ -399,66 +683,98 @@ const groupedHeadings = groupHeadings(headings);
 
     const uniqueArtifacts = Array.from(uniqueArtifactsMap.values());
 
+    const desktopSection = document.getElementById("toc-artifacts-section");
+    const desktopList = document.getElementById("toc-artifacts-list");
+    const desktopCount = document.getElementById("toc-artifacts-count");
+    const desktopToggle = document.getElementById("toc-artifacts-toggle");
+    const desktopChevron = document.getElementById("toc-artifacts-chevron");
+
+    const mobileSection = document.getElementById("toc-mobile-artifacts-section");
+    const mobileList = document.getElementById("toc-mobile-artifacts-list");
+    const mobileCount = document.getElementById("toc-mobile-artifacts-count");
+    const mobileToggle = document.getElementById("toc-mobile-artifacts-toggle");
+    const mobileChevron = document.getElementById("toc-mobile-artifacts-chevron");
+
     if (uniqueArtifacts.length === 0) {
-      artifactsSection.classList.add("hidden");
+      desktopSection?.classList.add("hidden");
+      mobileSection?.classList.add("hidden");
       return;
     }
 
-    artifactsCount.textContent = `[${uniqueArtifacts.length}]`;
+    if (desktopCount) desktopCount.textContent = `[${uniqueArtifacts.length}]`;
+    if (mobileCount) mobileCount.textContent = `[${uniqueArtifacts.length}]`;
 
-    uniqueArtifacts.forEach(({ href, text }) => {
-      let badgeLabel = "LINK";
-      if (href.endsWith(".py") || href.includes("/code/") || text.endsWith(".py")) {
-        badgeLabel = "CODE";
-      } else if (href.includes("/datasets/") || href.includes("dataset")) {
-        badgeLabel = "DATA";
-      } else if (href.includes("github.com")) {
-        badgeLabel = "REPO";
-      }
+    const renderArtifactItems = (container: HTMLElement | null, isMobile: boolean) => {
+      if (!container) return;
+      container.innerHTML = "";
+      uniqueArtifacts.forEach(({ href, text }) => {
+        let badgeLabel = "LINK";
+        if (href.endsWith(".py") || href.includes("/code/") || text.endsWith(".py")) {
+          badgeLabel = "CODE";
+        } else if (href.includes("/datasets/") || href.includes("dataset")) {
+          badgeLabel = "DATA";
+        } else if (href.includes("github.com")) {
+          badgeLabel = "REPO";
+        }
 
-      const li = document.createElement("li");
-      li.className = "w-full min-w-0";
+        const li = document.createElement("li");
+        li.className = "w-full min-w-0";
 
-      const a = document.createElement("a");
-      a.href = href;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.title = `${text} (${href})`;
-      a.className = "toc-artifact-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+        const a = document.createElement("a");
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.title = `${text} (${href})`;
+        a.className = "toc-artifact-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
 
-      a.innerHTML = `
-        <span class="font-mono text-[10px] font-black text-accent shrink-0 uppercase tracking-tighter">[${badgeLabel}]</span>
-        <span class="truncate min-w-0 block flex-1 font-semibold">${text}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground/70 ms-0.5">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-          <polyline points="15 3 21 3 21 9"/>
-          <line x1="10" y1="14" x2="21" y2="3"/>
-        </svg>
-      `;
+        a.innerHTML = `
+          <span class="font-mono text-[10px] font-black text-accent shrink-0 uppercase tracking-tighter">[${badgeLabel}]</span>
+          <span class="truncate min-w-0 block flex-1 font-semibold">${text}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground/70 ms-0.5">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        `;
 
-      li.appendChild(a);
-      artifactsList.appendChild(li);
-    });
+        if (isMobile) {
+          a.addEventListener("click", () => startAutoCloseTimer());
+        }
 
-    // Collapsible toggle functionality (+ / -)
-    artifactsToggle.onclick = (e) => {
-      e.preventDefault();
-      const isExpanded = artifactsToggle.getAttribute("aria-expanded") === "true";
-      if (isExpanded) {
-        artifactsList.classList.add("hidden");
-        artifactsChevron.textContent = "+";
-        artifactsToggle.setAttribute("aria-expanded", "false");
-      } else {
-        artifactsList.classList.remove("hidden");
-        artifactsChevron.textContent = "−";
-        artifactsToggle.setAttribute("aria-expanded", "true");
-      }
+        li.appendChild(a);
+        container.appendChild(li);
+      });
     };
 
-    artifactsSection.classList.remove("hidden");
+    renderArtifactItems(desktopList, false);
+    renderArtifactItems(mobileList, true);
+
+    const setupToggle = (toggleBtn: HTMLElement | null, listEl: HTMLElement | null, chevronEl: HTMLElement | null) => {
+      if (!toggleBtn || !listEl || !chevronEl) return;
+      toggleBtn.onclick = (e) => {
+        e.preventDefault();
+        const isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+        if (isExpanded) {
+          listEl.classList.add("hidden");
+          chevronEl.textContent = "+";
+          toggleBtn.setAttribute("aria-expanded", "false");
+        } else {
+          listEl.classList.remove("hidden");
+          chevronEl.textContent = "−";
+          toggleBtn.setAttribute("aria-expanded", "true");
+        }
+      };
+    };
+
+    setupToggle(desktopToggle, desktopList, desktopChevron);
+    setupToggle(mobileToggle, mobileList, mobileChevron);
+
+    desktopSection?.classList.remove("hidden");
+    mobileSection?.classList.remove("hidden");
   }
 
   function initToc() {
+    setupMobileDrawer();
     setupTocToggle();
     setupTocScrollspy();
     setupFiguresNav();

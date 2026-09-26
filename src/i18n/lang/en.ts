@@ -4,6 +4,7 @@ export default {
   nav: {
     home: "Home",
     posts: "Articles",
+    threads: "Threads",
     tags: "Tags",
     about: "About",
     archives: "Archives",
@@ -46,6 +47,9 @@ export default {
 
     postsTitle: "Articles",
     postsDesc: "All published research articles.",
+
+    threadsTitle: "Experiment Threads",
+    threadsDesc: "Real-time research notes and experiment logs.",
 
     archivesTitle: "Archives",
     archivesDesc: "All archived research articles.",

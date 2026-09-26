@@ -19,6 +19,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
+import { devThreadsPlugin } from "./src/utils/devThreadsPlugin";
 import config from "./astro-paper.config";
 
 function rehypeIgnoreKatexMathml() {
@@ -81,7 +82,7 @@ export default defineConfig({
     },
   },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), devThreadsPlugin()],
     server: {
       allowedHosts: true,
     },
