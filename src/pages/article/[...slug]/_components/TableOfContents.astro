@@ -45,9 +45,9 @@ const groupedHeadings = groupHeadings(headings);
         data-pagefind-ignore
         title="Open Table of Contents"
         aria-label="Open Table of Contents"
-        class="xl:hidden fixed bottom-24 right-0 z-30 flex items-center justify-center rounded-l-xl border border-r-0 border-border/80 bg-background/95 text-accent backdrop-blur-md p-2.5 pl-3 shadow-xl hover:border-accent hover:-translate-x-0.5 transition-all cursor-pointer group"
+        class="xl:hidden fixed bottom-24 right-0 z-30 flex size-12 items-center justify-center rounded-l-xl border border-r-0 border-border/80 bg-background/95 text-accent backdrop-blur-md shadow-xl hover:border-accent hover:-translate-x-0.5 transition-all cursor-pointer group"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="size-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" class="size-6 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="4" y1="6" x2="20" y2="6"/>
           <line x1="4" y1="12" x2="20" y2="12"/>
           <line x1="4" y1="18" x2="20" y2="18"/>
@@ -98,11 +98,11 @@ const groupedHeadings = groupHeadings(headings);
                   <a
                     href={`#${h2.slug}`}
                     title={h2.text}
-                    class="toc-link toc-h2 flex items-center justify-between w-full min-w-0 py-1 text-sm font-bold leading-snug text-foreground/85 hover:text-accent transition-colors focus:outline-none"
+                    class="toc-link toc-h2 flex flex-col items-start w-full min-w-0 py-1 text-sm font-bold leading-snug text-foreground/85 hover:text-accent transition-colors focus:outline-none"
                     data-slug={h2.slug}
                     data-parent-slug={h2.slug}
                   >
-                    <span class="truncate min-w-0 block flex-1">{h2.text}</span>
+                    <span class="truncate min-w-0 block w-full">{h2.text}</span>
                   </a>
 
                   {children.length > 0 && (
@@ -112,11 +112,11 @@ const groupedHeadings = groupHeadings(headings);
                           <a
                             href={`#${child.slug}`}
                             title={child.text}
-                            class="toc-link toc-h3 block w-full min-w-0 py-0.5 text-xs font-semibold leading-relaxed text-muted-foreground hover:text-accent transition-colors focus:outline-none"
+                            class="toc-link toc-h3 flex flex-col items-start w-full min-w-0 py-0.5 text-xs font-semibold leading-relaxed text-muted-foreground hover:text-accent transition-colors focus:outline-none"
                             data-slug={child.slug}
                             data-parent-slug={h2.slug}
                           >
-                            <span class="truncate min-w-0 block">{child.text}</span>
+                            <span class="truncate min-w-0 block w-full">{child.text}</span>
                           </a>
                         </li>
                       ))}
@@ -170,24 +170,6 @@ const groupedHeadings = groupHeadings(headings);
               <!-- Populated dynamically -->
             </ul>
           </div>
-        </div>
-
-        <!-- Mobile Drawer Bottom Auto-Close Indicator -->
-        <div
-          id="toc-mobile-autoclose-bar"
-          class="hidden px-5 py-3 border-t border-border/60 bg-muted/40 backdrop-blur-sm flex items-center justify-between text-xs font-mono shrink-0 transition-all"
-        >
-          <div class="flex items-center gap-2 text-muted-foreground">
-            <span class="inline-block size-2 rounded-full bg-accent animate-pulse"></span>
-            <span>Navigating... Closing in <strong id="toc-autoclose-seconds" class="text-accent font-black">3s</strong></span>
-          </div>
-          <button
-            id="toc-autoclose-cancel"
-            type="button"
-            class="text-[11px] font-bold text-muted-foreground hover:text-accent underline underline-offset-2 cursor-pointer"
-          >
-            Cancel
-          </button>
         </div>
       </aside>
 
@@ -320,53 +302,45 @@ const groupedHeadings = groupHeadings(headings);
 
 <script>
   let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
-  let autoCloseInterval: ReturnType<typeof setInterval> | null = null;
-  let remainingSeconds = 3;
+  let activeProgressContainer: HTMLElement | null = null;
 
   function clearAutoCloseTimer() {
     if (autoCloseTimer !== null) {
       clearTimeout(autoCloseTimer);
       autoCloseTimer = null;
     }
-    if (autoCloseInterval !== null) {
-      clearInterval(autoCloseInterval);
-      autoCloseInterval = null;
+    if (activeProgressContainer) {
+      activeProgressContainer.remove();
+      activeProgressContainer = null;
     }
-    const bar = document.getElementById("toc-mobile-autoclose-bar");
-    if (bar) bar.classList.add("hidden");
   }
 
-  function startAutoCloseTimer() {
+  function startItemAutoClose(targetElement: HTMLElement) {
     clearAutoCloseTimer();
 
-    remainingSeconds = 3;
-    const bar = document.getElementById("toc-mobile-autoclose-bar");
-    const secondsEl = document.getElementById("toc-autoclose-seconds");
-    const cancelBtn = document.getElementById("toc-autoclose-cancel");
+    // Create finish line progress container attached directly under clicked link
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "toc-progress-container relative overflow-hidden h-0.5 w-full bg-accent/20 rounded-full mt-1.5 pointer-events-none transition-opacity duration-200";
 
-    if (bar && secondsEl) {
-      secondsEl.textContent = `${remainingSeconds}s`;
-      bar.classList.remove("hidden");
+    const progressBar = document.createElement("div");
+    progressBar.className =
+      "toc-progress-bar h-full bg-accent rounded-full transition-all duration-[2200ms] ease-linear w-0";
 
-      if (cancelBtn) {
-        cancelBtn.onclick = (e) => {
-          e.preventDefault();
-          clearAutoCloseTimer();
-        };
-      }
-    }
+    progressContainer.appendChild(progressBar);
+    targetElement.appendChild(progressContainer);
+    activeProgressContainer = progressContainer;
 
-    autoCloseInterval = setInterval(() => {
-      remainingSeconds -= 1;
-      if (secondsEl) {
-        secondsEl.textContent = `${Math.max(remainingSeconds, 0)}s`;
-      }
-    }, 1000);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        progressBar.style.width = "100%";
+      });
+    });
 
     autoCloseTimer = setTimeout(() => {
       clearAutoCloseTimer();
       closeMobileDrawer();
-    }, 3000);
+    }, 2200);
   }
 
   function closeMobileDrawer() {
@@ -424,8 +398,8 @@ const groupedHeadings = groupHeadings(headings);
           childrenList?.classList.remove("hidden");
         }
 
-        // Start / Reset auto-close timer countdown
-        startAutoCloseTimer();
+        // Start / Reset finish line timer directly on clicked link
+        startItemAutoClose(link);
       });
     });
 
@@ -620,11 +594,13 @@ const groupedHeadings = groupHeadings(headings);
         const a = document.createElement("a");
         a.href = `#${figId}`;
         a.title = caption;
-        a.className = "toc-figure-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+        a.className = "toc-figure-link flex flex-col items-start gap-1 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
 
         a.innerHTML = `
-          <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${figNum}</span>
-          <span class="truncate min-w-0 block flex-1 font-semibold">${caption}</span>
+          <div class="flex items-center gap-2 w-full min-w-0">
+            <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${figNum}</span>
+            <span class="truncate min-w-0 block flex-1 font-semibold">${caption}</span>
+          </div>
         `;
 
         a.addEventListener("click", (e) => {
@@ -633,7 +609,7 @@ const groupedHeadings = groupHeadings(headings);
           img.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
           setTimeout(() => img.classList.remove("ring-2", "ring-accent"), 2000);
           if (isMobile) {
-            startAutoCloseTimer();
+            startItemAutoClose(a);
           }
         });
 
@@ -738,20 +714,22 @@ const groupedHeadings = groupHeadings(headings);
         a.target = "_blank";
         a.rel = "noopener noreferrer";
         a.title = `${text} (${href})`;
-        a.className = "toc-artifact-link flex items-center gap-2 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+        a.className = "toc-artifact-link flex flex-col items-start gap-1 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
 
         a.innerHTML = `
-          <span class="font-mono text-[10px] font-black text-accent shrink-0 uppercase tracking-tighter">[${badgeLabel}]</span>
-          <span class="truncate min-w-0 block flex-1 font-semibold">${text}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground/70 ms-0.5">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
+          <div class="flex items-center gap-2 w-full min-w-0">
+            <span class="font-mono text-[10px] font-black text-accent shrink-0 uppercase tracking-tighter">[${badgeLabel}]</span>
+            <span class="truncate min-w-0 block flex-1 font-semibold">${text}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted-foreground/70 ms-0.5">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+          </div>
         `;
 
         if (isMobile) {
-          a.addEventListener("click", () => startAutoCloseTimer());
+          a.addEventListener("click", () => startItemAutoClose(a));
         }
 
         li.appendChild(a);
