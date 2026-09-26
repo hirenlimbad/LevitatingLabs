@@ -325,7 +325,7 @@ const groupedHeadings = groupHeadings(headings);
 
     const progressBar = document.createElement("div");
     progressBar.className =
-      "toc-progress-bar h-full bg-accent rounded-full transition-all duration-[2200ms] ease-linear w-0";
+      "toc-progress-bar h-full bg-accent rounded-full transition-all duration-[1700ms] ease-linear w-0";
 
     progressContainer.appendChild(progressBar);
     targetElement.appendChild(progressContainer);
@@ -340,7 +340,7 @@ const groupedHeadings = groupHeadings(headings);
     autoCloseTimer = setTimeout(() => {
       clearAutoCloseTimer();
       closeMobileDrawer();
-    }, 2200);
+    }, 1700);
   }
 
   function closeMobileDrawer() {
