@@ -15,7 +15,7 @@
     h3,
     h4,
     th {
-      @apply text-foreground mb-3;
+      @apply text-foreground mb-3 text-left;
     }
 
     h3 {
@@ -32,6 +32,11 @@
       @apply text-foreground;
     }
 
+    p {
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
     a {
       @apply text-foreground hover:text-accent wrap-break-word decoration-dashed underline-offset-4 focus-visible:no-underline;
     }
@@ -42,6 +47,7 @@
 
     li {
       @apply marker:text-accent;
+      text-align: justify;
     }
 
     hr {
@@ -195,11 +201,13 @@
     /* Sub-timestamp directly underneath post h2 headers */
     h2 + p > em:only-child,
     h2 + p > em {
-      @apply block text-xs font-medium text-muted-foreground not-italic -mt-2 mb-3;
+      @apply block text-xs font-medium text-muted-foreground not-italic -mt-2 mb-3 text-left;
     }
 
     p {
       @apply leading-relaxed my-3 text-sm sm:text-base text-foreground/90;
+      text-align: justify;
+      text-justify: inter-word;
     }
 
     ul, ol {
@@ -208,14 +216,16 @@
 
     li {
       @apply marker:text-accent font-normal;
+      text-align: justify;
     }
 
     pre {
-      @apply rounded-2xl border border-border/80 bg-muted/40 p-4 shadow-2xs text-xs sm:text-sm my-5 overflow-x-auto;
+      @apply rounded-2xl border border-border/80 bg-muted/40 p-4 shadow-2xs text-xs sm:text-sm my-5 overflow-x-auto text-left;
     }
 
     blockquote {
       @apply border-l-4 border-accent/80 bg-accent/5 px-4 py-3 rounded-r-xl my-5 italic text-sm sm:text-base text-foreground/90 shadow-2xs;
+      text-align: justify;
     }
   }
 }
