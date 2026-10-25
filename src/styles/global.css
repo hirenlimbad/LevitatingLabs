@@ -50,7 +50,13 @@
 }
 
 /* ===== Print & PDF Export Styles ===== */
+@page {
+  size: A4 portrait;
+  margin: 12mm 15mm 12mm 15mm;
+}
+
 @media print {
+  /* Hide non-content UI and interactive navigation */
   header,
   footer,
   #toc-sidebar,
@@ -58,34 +64,326 @@
   #back-to-top-btn,
   #download-pdf-btn,
   .report-btn-wrapper,
-  .share-links-wrapper {
+  .share-links-wrapper,
+  .progress-container,
+  #myBar,
+  #cookie-consent,
+  .comments-wrapper,
+  #comments,
+  #giscus-container,
+  .adjacent-post-nav,
+  .ai-prompt-wrapper,
+  #ai-prompt-btn,
+  #ai-prompt-modal,
+  #ai-prompt-backdrop,
+  [data-edit-post],
+  .edit-post-btn,
+  #article ~ hr,
+  #article ~ ul,
+  #article ~ div:has(#download-pdf-btn),
+  .carousel-progress-track,
+  .carousel-counter,
+  .carousel-expand,
+  .carousel-prev,
+  .carousel-next,
+  .carousel-dots,
+  .carousel-modal {
     display: none !important;
   }
 
-  body {
+  /* Reset layout constraints to use full printable width */
+  html, body {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #111827 !important;
+    font-size: 10pt !important;
+    line-height: 1.45 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
 
+  .app-layout,
+  main#main-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Content typography scaling & vertical tightening */
   .app-prose {
-    color: #000000 !important;
+    color: #111827 !important;
+    font-size: 10pt !important;
+    max-width: 100% !important;
+  }
+
+  .app-prose h1 {
+    font-size: 18pt !important;
+    line-height: 1.25 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .app-prose h2 {
+    font-size: 13pt !important;
+    line-height: 1.3 !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 0.4rem !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .app-prose h3 {
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.3rem !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .app-prose p {
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.35rem !important;
+    line-height: 1.45 !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .app-prose ul,
+  .app-prose ol {
+    margin-top: 0.3rem !important;
+    margin-bottom: 0.3rem !important;
+    padding-left: 1.25rem !important;
+  }
+
+  .app-prose li {
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+    line-height: 1.4 !important;
   }
 
   .app-prose a {
     text-decoration: underline !important;
-    color: #000000 !important;
+    color: #111827 !important;
+  }
+
+  .app-prose blockquote {
+    margin: 0.5rem 0 !important;
+    padding: 0.4rem 0.8rem !important;
+    font-size: 9.5pt !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .app-prose pre {
+    margin: 0.5rem 0 !important;
+    padding: 0.5rem !important;
+    font-size: 8.5pt !important;
+    line-height: 1.35 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #e2e8f0 !important;
   }
 
   .katex {
-    color: #000000 !important;
+    color: #111827 !important;
   }
 
-  img {
+  .katex-display {
+    margin: 0.5rem 0 !important;
+    padding: 0.35rem !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Compact Table formatting in print - No Cut-Off Columns */
+  .table-wrapper {
+    margin: 0.6rem 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
     max-width: 100% !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    background: transparent !important;
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 
-  table, tr, td, th {
+  table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    overflow: visible !important;
+    font-size: 7.5pt !important;
+    line-height: 1.25 !important;
     page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group !important;
+    background: #f1f5f9 !important;
+  }
+
+  tbody {
+    display: table-row-group !important;
+  }
+
+  tr {
+    display: table-row !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  th,
+  td {
+    display: table-cell !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    vertical-align: middle !important;
+  }
+
+  th {
+    padding: 4px 4px !important;
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
+    border-bottom: 1.5px solid #94a3b8 !important;
+  }
+
+  td {
+    padding: 3px 4px !important;
+    font-size: 7.5pt !important;
+    color: #1e293b !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  /* Highlighted column in print */
+  th.highlight-col {
+    background-color: #fef3c7 !important;
+    color: #b45309 !important;
+    font-weight: 800 !important;
+    border-left: 1px solid #f59e0b !important;
+    border-right: 1px solid #f59e0b !important;
+  }
+
+  td.highlight-col {
+    background-color: #fffbeb !important;
+    color: #92400e !important;
+    font-weight: 700 !important;
+    border-left: 1px solid #fde68a !important;
+    border-right: 1px solid #fde68a !important;
+  }
+
+  td .katex,
+  th .katex {
+    font-size: 7.5pt !important;
+  }
+
+  /* Standalone image scaling */
+  img:not(.carousel-slide img) {
+    max-width: 100% !important;
+    max-height: 260px !important;
+    object-fit: contain !important;
+    margin: 0.5rem auto !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* =================================================== */
+  /* IMAGE CAROUSEL: Compact Sequential Vertical Figures */
+  /* =================================================== */
+  .image-carousel-container {
+    margin: 0.75rem 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .carousel-wrapper {
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .carousel-track {
+    position: static !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+    min-height: 0 !important;
+    aspect-ratio: auto !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .carousel-slide {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 0.75rem !important;
+    padding: 0 !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+
+  .carousel-slide .carousel-img-clickable,
+  .carousel-slide div:has(img) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+
+  .carousel-slide img {
+    max-height: 220px !important;
+    max-width: 90% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .carousel-slide .slide-caption {
+    display: block !important;
+    font-size: 8.5pt !important;
+    line-height: 1.35 !important;
+    color: #4b5563 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 0.35rem !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    text-align: center !important;
   }
 }

@@ -243,6 +243,60 @@ const readingTime = getReadingTime(post.body ?? "");
     if (!article) return;
     const tables = Array.from(article.querySelectorAll("table"));
     for (const table of tables) {
+      // Highlight detection for client-rendered tables
+      const ths = Array.from(table.querySelectorAll("thead th, tr:first-child th"));
+      ths.forEach((th, colIdx) => {
+        const text = th.textContent || "";
+        const markerRegex = /\{highlight\}|\{:highlight\}|\[highlight\]|\[hl\]|\{hl\}/i;
+        const hasStar = text.includes("★") || text.includes("⭐");
+        const hasExclamation = /^!!.+!!$/.test(text.trim());
+
+        if (markerRegex.test(text) || hasStar || hasExclamation) {
+          th.childNodes.forEach(child => {
+            if (child.nodeType === Node.TEXT_NODE && child.textContent) {
+              child.textContent = child.textContent
+                .replace(/\{highlight\}|\{:highlight\}|\[highlight\]|\[hl\]|\{hl\}/gi, "")
+                .replace(/^!!|!!$/g, "")
+                .trim();
+            }
+          });
+          th.classList.add("highlight-col");
+
+          const rows = table.querySelectorAll("tbody tr");
+          rows.forEach(row => {
+            const cells = row.querySelectorAll("td, th");
+            if (cells[colIdx]) {
+              cells[colIdx].classList.add("highlight-col");
+            }
+          });
+        }
+      });
+
+      // Row highlight detection
+      const bodyRows = table.querySelectorAll("tbody tr");
+      bodyRows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll("td, th"));
+        let isRowHighlighted = false;
+        cells.forEach(cell => {
+          const text = cell.textContent || "";
+          const rowMarkerRegex = /\{highlight(?:-row)?\}|\{:highlight(?:-row)?\}|\{\.highlight(?:-row)?\}|\[highlight(?:-row)?\]|\[hl\]|\{hl\}/i;
+          const hasStar = text.includes("★") || text.includes("⭐");
+          if (rowMarkerRegex.test(text) || hasStar) {
+            isRowHighlighted = true;
+            cell.childNodes.forEach(child => {
+              if (child.nodeType === Node.TEXT_NODE && child.textContent) {
+                child.textContent = child.textContent
+                  .replace(/\{highlight(?:-row)?\}|\{:highlight(?:-row)?\}|\{\.highlight(?:-row)?\}|\[highlight(?:-row)?\]|\[hl\]|\{hl\}/gi, "")
+                  .trim();
+              }
+            });
+          }
+        });
+        if (isRowHighlighted) {
+          row.classList.add("highlight-row");
+        }
+      });
+
       if (table.closest(".table-wrapper") || table.closest("[data-table-variant]")) continue;
       const wrapper = document.createElement("div");
       wrapper.className = "table-wrapper";

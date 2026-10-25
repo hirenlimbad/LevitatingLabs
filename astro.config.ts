@@ -20,6 +20,7 @@ import {
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import { devThreadsPlugin } from "./src/utils/devThreadsPlugin";
+import { rehypeTableColumnHighlight } from "./src/utils/rehypeTableColumnHighlight";
 import config from "./astro-paper.config";
 
 function rehypeIgnoreKatexMathml() {
@@ -67,7 +68,12 @@ export default defineConfig({
         remarkToc,
         [remarkCollapse, { test: "Table of contents" }],
       ],
-      rehypePlugins: [rehypeCallouts, rehypeKatex, rehypeIgnoreKatexMathml],
+      rehypePlugins: [
+        rehypeCallouts,
+        rehypeKatex,
+        rehypeIgnoreKatexMathml,
+        rehypeTableColumnHighlight,
+      ],
     }),
     shikiConfig: {
       themes: { light: "min-light", dark: "night-owl" },

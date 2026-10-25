@@ -142,7 +142,7 @@ The performance below represents the **Mean ± Standard Deviation across 3 indep
 
 ### Proposed Model Performance (ESM-2 + Inductive k-NN)
 
-| Evaluation Split | F1-Score (@0.5) | F1-Score (Optimal $\tau^*$) | ROC-AUC | AUPR | Hit@15 | NDCG@15 |
+| Evaluation Split | F1-Score (@0.5) | F1-Score (Optimal $\tau^*$) | ROC-AUC {highlight} | AUPR | Hit@15 | NDCG@15 |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **RANDOM** | **94.08 ± 0.15%** | **94.23 ± 0.16%** | **97.76 ± 0.05%** | **98.27 ± 0.04%** | **100.00 ± 0.00%** | **70.04 ± 0.64%** |
 | **TARGET_OOD** | **89.82 ± 0.38%** | **91.57 ± 0.25%** | **95.39 ± 0.04%** | **96.57 ± 0.03%** | **100.00 ± 0.00%** | **60.55 ± 2.04%** |

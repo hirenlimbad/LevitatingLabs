@@ -35,12 +35,50 @@ const { class: className = "" } = Astro.props;
 </button>
 
 <script>
+  const MAX_PDF_TITLE_CHARS = 50;
+
+  function getCappedPdfTitle(fullTitle: string, maxLen = MAX_PDF_TITLE_CHARS): string {
+    if (!fullTitle) return fullTitle;
+    const parts = fullTitle.split("|");
+    const siteName = parts.length > 1 ? parts[parts.length - 1].trim() : "";
+    const mainTitle = parts.slice(0, parts.length > 1 ? -1 : undefined).join("|").trim();
+
+    if (mainTitle.length <= maxLen) return fullTitle;
+
+    const truncated = mainTitle.slice(0, maxLen).trimEnd() + "…";
+    return siteName ? `${truncated} | ${siteName}` : truncated;
+  }
+
+  let originalTitle = "";
+
+  function preparePrintTitle() {
+    if (!originalTitle) {
+      originalTitle = document.title;
+    }
+    document.title = getCappedPdfTitle(originalTitle);
+  }
+
+  function restorePrintTitle() {
+    if (originalTitle) {
+      document.title = originalTitle;
+      originalTitle = "";
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("beforeprint", preparePrintTitle);
+    window.addEventListener("afterprint", restorePrintTitle);
+  }
+
   function setupPdfDownload() {
     const btn = document.getElementById("download-pdf-btn");
     if (!btn) return;
 
     btn.onclick = () => {
+      preparePrintTitle();
       window.print();
+      // Fallback restore in case afterprint doesn't fire immediately
+      setTimeout(restorePrintTitle, 1500);
     };
   }
 

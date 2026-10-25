@@ -75,7 +75,7 @@
     }
 
     .table-wrapper {
-      @apply my-6 w-full overflow-x-auto rounded-xl border border-border/70 bg-muted/20 shadow-2xs backdrop-blur-xs;
+      @apply my-6 w-full overflow-x-auto rounded-xl border border-border bg-background shadow-xs;
 
       table {
         @apply my-0 min-w-full border-0 rounded-none shadow-none;
@@ -83,27 +83,55 @@
     }
 
     table {
-      @apply my-6 w-full border-collapse text-sm overflow-hidden rounded-xl border border-border/70 bg-muted/10;
+      @apply my-6 w-full min-w-full border-collapse text-sm overflow-hidden rounded-xl border border-border bg-background shadow-xs;
 
       thead {
-        @apply bg-muted/40 dark:bg-muted/20;
+        @apply border-b border-border bg-muted/60 dark:bg-muted/30;
       }
 
       thead tr,
       tr:first-child:has(th) {
-        @apply border-b border-border/80;
+        @apply border-b border-border;
       }
 
       th {
-        @apply border-b border-border/80 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 dark:bg-muted/15;
+        @apply border-b border-border py-3.5 px-4 text-left font-semibold text-foreground/90 uppercase tracking-wider text-xs whitespace-nowrap;
+
+        &.highlight-col {
+          @apply bg-accent/10 border-x border-accent/20 text-accent font-bold;
+        }
       }
 
       td {
-        @apply border-b border-border/30 px-4 py-3 text-foreground align-middle tabular-nums;
+        @apply border-b border-border/50 py-3 px-4 text-sm text-foreground tabular-nums align-middle;
+
+        &.highlight-col {
+          @apply bg-accent/5 border-x border-accent/20 font-bold text-accent;
+        }
       }
 
       tbody tr {
         @apply transition-colors duration-150;
+
+        &:nth-child(even) {
+          @apply bg-muted/30 dark:bg-muted/15;
+        }
+
+        &.highlight-row {
+          @apply bg-accent/10 border-y border-accent/25;
+
+          td {
+            @apply font-medium text-foreground;
+          }
+
+          td:first-child {
+            @apply font-bold text-accent;
+          }
+
+          td.highlight-col {
+            @apply bg-accent/20 font-bold text-accent;
+          }
+        }
 
         &:last-child td {
           @apply border-b-0;
@@ -111,6 +139,14 @@
 
         &:hover {
           @apply bg-accent/5;
+
+          &.highlight-row {
+            @apply bg-accent/15;
+          }
+
+          td.highlight-col {
+            @apply bg-accent/15;
+          }
         }
       }
 
