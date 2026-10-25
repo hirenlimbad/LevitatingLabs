@@ -313,7 +313,7 @@ const readingTime = getReadingTime(post.body ?? "");
     requestAnimationFrame(() => {
       const images = Array.from(article.querySelectorAll("img"));
       for (const image of images) {
-        if (image.closest("a")) continue;
+        if (image.closest("a") || image.closest(".image-carousel-container")) continue;
         image.setAttribute("role", "button");
         image.setAttribute("tabindex", "0");
         image.setAttribute("aria-haspopup", "dialog");
@@ -531,7 +531,7 @@ const readingTime = getReadingTime(post.body ?? "");
 
     function triggerFromEvent(e) {
       const image = e.target.closest("img");
-      if (!image || !article.contains(image) || image.closest("a")) return null;
+      if (!image || !article.contains(image) || image.closest("a") || image.closest(".image-carousel-container")) return null;
       return image;
     }
 

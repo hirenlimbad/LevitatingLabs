@@ -1,0 +1,177 @@
+---
+// Top glowing progress bar for view transitions and slow network indication
+---
+
+<div
+  id="nav-progress-container"
+  transition:persist="nav-progress-bar"
+  aria-hidden="true"
+  style="position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 2147483647; pointer-events: none; opacity: 0; transition: opacity 150ms ease-out;"
+>
+  <div
+    id="nav-progress-bar"
+    style="position: relative; height: 100%; width: 100%; transform: translate3d(-100%, 0, 0); will-change: transform; transition: transform 200ms ease-out; background: var(--accent); box-shadow: 0 0 10px var(--accent), 0 0 5px var(--accent);"
+  >
+    <div
+      style="position: absolute; top: 0; right: 0; bottom: 0; width: 100px; background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.5), #ffffff); box-shadow: 0 0 12px #ffffff;"
+    >
+    </div>
+  </div>
+</div>
+
+<script>
+  let progress = 0;
+  let trickleInterval: ReturnType<typeof setInterval> | null = null;
+  let resetTimeout: ReturnType<typeof setTimeout> | null = null;
+  let safetyTimeout: ReturnType<typeof setTimeout> | null = null;
+  let isNavigating = false;
+
+  function getElements() {
+    return {
+      container: document.getElementById("nav-progress-container"),
+      bar: document.getElementById("nav-progress-bar"),
+    };
+  }
+
+  function setProgress(val: number, speedMs: number = 200) {
+    const { bar } = getElements();
+    if (!bar) return;
+    progress = Math.min(Math.max(val, 0), 100);
+    bar.style.transitionDuration = `${speedMs}ms`;
+    bar.style.transform = `translate3d(${progress - 100}%, 0, 0)`;
+  }
+
+  function start() {
+    const { container, bar } = getElements();
+    if (!container || !bar) return;
+
+    if (resetTimeout) clearTimeout(resetTimeout);
+    if (trickleInterval) clearInterval(trickleInterval);
+    if (safetyTimeout) clearTimeout(safetyTimeout);
+
+    isNavigating = true;
+
+    // Reset bar instantly
+    setProgress(0, 0);
+    container.style.opacity = "1";
+
+    // Immediate jump so user sees it right away upon click
+    requestAnimationFrame(() => {
+      setProgress(25, 180);
+    });
+
+    // Trickle forward smoothly during slow network fetch
+    trickleInterval = setInterval(() => {
+      if (progress < 60) {
+        setProgress(progress + Math.random() * 8 + 4, 300);
+      } else if (progress < 80) {
+        setProgress(progress + Math.random() * 4 + 2, 400);
+      } else if (progress < 92) {
+        setProgress(progress + Math.random() * 1.5 + 0.5, 500);
+      }
+    }, 350);
+
+    // Failsafe timeout
+    safetyTimeout = setTimeout(() => {
+      if (isNavigating) complete();
+    }, 15000);
+  }
+
+  function complete() {
+    const { container, bar } = getElements();
+    if (!container || !bar || !isNavigating) return;
+
+    if (trickleInterval) {
+      clearInterval(trickleInterval);
+      trickleInterval = null;
+    }
+    if (safetyTimeout) {
+      clearTimeout(safetyTimeout);
+      safetyTimeout = null;
+    }
+
+    // Snap to 100%
+    setProgress(100, 180);
+
+    // Fade out and reset
+    resetTimeout = setTimeout(() => {
+      container.style.opacity = "0";
+
+      resetTimeout = setTimeout(() => {
+        setProgress(0, 0);
+        isNavigating = false;
+      }, 250);
+    }, 150);
+  }
+
+  // 1. Instant click trigger on any internal navigation link
+  document.addEventListener("click", e => {
+    // Ignore modified clicks (cmd/ctrl/shift/middle click/etc.)
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    ) {
+      return;
+    }
+
+    const target = e.target as Element | null;
+    const anchor = target?.closest("a");
+    if (!anchor || !anchor.href) return;
+
+    // Ignore downloads or new tabs
+    if (anchor.target && anchor.target !== "_self") return;
+    if (anchor.hasAttribute("download")) return;
+
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      // Ignore external domains
+      if (url.origin !== window.location.origin) return;
+
+      // Ignore hash anchors on the same page (e.g. #toc, #skip-to-content)
+      if (
+        url.pathname === window.location.pathname &&
+        url.search === window.location.search &&
+        url.hash !== ""
+      ) {
+        return;
+      }
+
+      // Ignore if clicking the exact current page
+      if (url.href === window.location.href) return;
+
+      start();
+    } catch {
+      // invalid URL, ignore
+    }
+  });
+
+  // 2. Astro ClientRouter transition hooks
+  document.addEventListener("astro:before-preparation", event => {
+    const customEvent = event as unknown as { from?: URL; to?: URL };
+    if (customEvent.from && customEvent.to) {
+      if (
+        customEvent.from.origin === customEvent.to.origin &&
+        customEvent.from.pathname === customEvent.to.pathname &&
+        customEvent.from.search === customEvent.to.search &&
+        customEvent.to.hash !== ""
+      ) {
+        return;
+      }
+    }
+    start();
+  });
+
+  document.addEventListener("astro:page-load", () => {
+    if (isNavigating) {
+      complete();
+    }
+  });
+
+  window.addEventListener("error", () => {
+    if (isNavigating) complete();
+  });
+</script>

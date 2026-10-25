@@ -72,7 +72,7 @@ const groupedHeadings = groupHeadings(headings);
         <div class="px-5 py-4 border-b border-border/60 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
             <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
-              // IN THIS ARTICLE
+              // TABLE OF CONTENTS
             </span>
             <span class="font-mono text-xs font-bold text-accent">
               [{groupedHeadings.length}]
@@ -197,7 +197,7 @@ const groupedHeadings = groupHeadings(headings);
           <!-- Header -->
           <div class="mb-3.5 flex items-center justify-between border-b border-border/60 pb-2">
             <span class="font-mono text-xs font-black tracking-widest text-foreground uppercase">
-              // IN THIS ARTICLE
+              // TABLE OF CONTENTS
             </span>
             <div class="flex items-center gap-2">
               <span class="font-mono text-xs font-bold text-accent">
@@ -303,6 +303,17 @@ const groupedHeadings = groupHeadings(headings);
 <script>
   let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
   let activeProgressContainer: HTMLElement | null = null;
+
+  let isManualScroll = false;
+  let manualScrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function setManualScrollLock() {
+    isManualScroll = true;
+    if (manualScrollTimer !== null) clearTimeout(manualScrollTimer);
+    manualScrollTimer = setTimeout(() => {
+      isManualScroll = false;
+    }, 1000);
+  }
 
   function clearAutoCloseTimer() {
     if (autoCloseTimer !== null) {
@@ -505,17 +516,6 @@ const groupedHeadings = groupHeadings(headings);
       }
     }
 
-    let isManualScroll = false;
-    let manualScrollTimer: ReturnType<typeof setTimeout> | null = null;
-
-    function setManualScrollLock() {
-      isManualScroll = true;
-      if (manualScrollTimer !== null) clearTimeout(manualScrollTimer);
-      manualScrollTimer = setTimeout(() => {
-        isManualScroll = false;
-      }, 1000);
-    }
-
     const observerOptions: IntersectionObserverInit = {
       rootMargin: "-90px 0px -70% 0px",
       threshold: 0,
@@ -535,13 +535,28 @@ const groupedHeadings = groupHeadings(headings);
 
     headingElsMap.forEach(el => observer.observe(el));
 
+    function scrollToTarget(slug: string) {
+      const target = document.getElementById(slug);
+      if (!target) return;
+      const topOffset = 85;
+      const elementPosition = target.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - topOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      history.pushState(null, "", `#${slug}`);
+    }
+
     tocLinks.forEach(link => {
-      link.addEventListener("click", () => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
         setManualScrollLock();
         const slug = link.getAttribute("data-slug");
         const parentSlug = link.getAttribute("data-parent-slug");
         if (slug) {
           highlightLink(slug);
+          scrollToTarget(slug);
         }
         if (parentSlug) {
           setActiveGroup(parentSlug);
@@ -554,7 +569,10 @@ const groupedHeadings = groupHeadings(headings);
     const article = document.getElementById("article");
     if (!article) return;
 
-    const images = Array.from(article.querySelectorAll<HTMLImageElement>("img"));
+    // Filter out modal clones - only index real in-content figures & slides
+    const rawImages = Array.from(article.querySelectorAll<HTMLImageElement>("img")).filter(
+      img => !img.closest(".carousel-modal")
+    );
     
     const desktopSection = document.getElementById("toc-figures-section");
     const desktopList = document.getElementById("toc-figures-list");
@@ -568,53 +586,249 @@ const groupedHeadings = groupHeadings(headings);
     const mobileToggle = document.getElementById("toc-mobile-figures-toggle");
     const mobileChevron = document.getElementById("toc-mobile-figures-chevron");
 
-    if (images.length === 0) {
+    type SlideData = {
+      slideIndex: number;
+      caption: string;
+      imgEl: HTMLImageElement;
+    };
+
+    type FigEntry =
+      | { type: "standalone"; img: HTMLImageElement; figNum: number; caption: string }
+      | { type: "carousel"; container: HTMLElement; carouselNum: number; slides: SlideData[] };
+
+    const entries: FigEntry[] = [];
+    let standaloneCount = 0;
+    let carouselCount = 0;
+    let totalItemsCount = 0;
+
+    rawImages.forEach((img) => {
+      const carouselContainer = img.closest<HTMLElement>(".image-carousel-container");
+      const carouselSlide = img.closest<HTMLElement>(".carousel-slide");
+
+      if (carouselContainer && carouselSlide) {
+        const slideIndex = parseInt(carouselSlide.dataset.index || "0", 10);
+        const caption = carouselSlide.dataset.caption || img.alt || `Slide ${slideIndex + 1}`;
+        const figId = img.id || `carousel-fig-${carouselContainer.id || "c"}-${slideIndex}`;
+        img.id = figId;
+
+        let existing = entries.find(
+          (e): e is Extract<FigEntry, { type: "carousel" }> =>
+            e.type === "carousel" && e.container === carouselContainer
+        );
+
+        if (!existing) {
+          carouselCount++;
+          existing = {
+            type: "carousel",
+            container: carouselContainer,
+            carouselNum: carouselCount,
+            slides: [],
+          };
+          entries.push(existing);
+        }
+
+        if (!existing.slides.some((s) => s.slideIndex === slideIndex)) {
+          existing.slides.push({
+            slideIndex,
+            caption,
+            imgEl: img,
+          });
+          totalItemsCount++;
+        }
+      } else if (!carouselContainer) {
+        standaloneCount++;
+        totalItemsCount++;
+        const figId = img.id || `article-figure-${standaloneCount}`;
+        img.id = figId;
+        const caption = img.getAttribute("alt") || `Figure ${standaloneCount}`;
+        entries.push({
+          type: "standalone",
+          img,
+          figNum: standaloneCount,
+          caption,
+        });
+      }
+    });
+
+    if (entries.length === 0) {
       desktopSection?.classList.add("hidden");
       mobileSection?.classList.add("hidden");
       return;
     }
 
-    if (desktopCount) desktopCount.textContent = `[${images.length}]`;
-    if (mobileCount) mobileCount.textContent = `[${images.length}]`;
+    if (desktopCount) desktopCount.textContent = `[${totalItemsCount}]`;
+    if (mobileCount) mobileCount.textContent = `[${totalItemsCount}]`;
 
     const renderItems = (container: HTMLElement | null, isMobile: boolean) => {
       if (!container) return;
       container.innerHTML = "";
-      images.forEach((img, index) => {
-        const figNum = index + 1;
-        const figId = img.id || `article-figure-${figNum}`;
-        img.id = figId;
 
-        const alt = img.getAttribute("alt") || "";
-        const caption = alt || `Figure ${figNum}`;
+      entries.forEach((entry) => {
+        if (entry.type === "standalone") {
+          const li = document.createElement("li");
+          li.className = "w-full min-w-0";
 
-        const li = document.createElement("li");
-        li.className = "w-full min-w-0";
+          const a = document.createElement("a");
+          a.href = `#${entry.img.id}`;
+          a.title = entry.caption;
+          a.className =
+            "toc-figure-link flex flex-col items-start gap-1 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
 
-        const a = document.createElement("a");
-        a.href = `#${figId}`;
-        a.title = caption;
-        a.className = "toc-figure-link flex flex-col items-start gap-1 py-1 text-xs font-bold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+          a.innerHTML = `
+            <div class="flex items-center gap-2 w-full min-w-0">
+              <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${entry.figNum}</span>
+              <span class="truncate min-w-0 block flex-1 font-semibold text-xs">${entry.caption}</span>
+            </div>
+          `;
 
-        a.innerHTML = `
-          <div class="flex items-center gap-2 w-full min-w-0">
-            <span class="font-mono text-xs font-black text-accent shrink-0">FIG.${figNum}</span>
-            <span class="truncate min-w-0 block flex-1 font-semibold">${caption}</span>
-          </div>
-        `;
+          a.addEventListener("click", (e) => {
+            e.preventDefault();
+            setManualScrollLock();
+            const topOffset = 85;
+            const y = entry.img.getBoundingClientRect().top + window.pageYOffset - topOffset;
+            window.scrollTo({ top: y, behavior: "smooth" });
+            entry.img.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
+            setTimeout(() => entry.img.classList.remove("ring-2", "ring-accent"), 2000);
+            if (isMobile) {
+              startItemAutoClose(a);
+            }
+          });
 
-        a.addEventListener("click", (e) => {
-          e.preventDefault();
-          img.scrollIntoView({ behavior: "smooth", block: "center" });
-          img.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
-          setTimeout(() => img.classList.remove("ring-2", "ring-accent"), 2000);
-          if (isMobile) {
-            startItemAutoClose(a);
-          }
-        });
+          li.appendChild(a);
+          container.appendChild(li);
+        } else if (entry.type === "carousel") {
+          const li = document.createElement("li");
+          li.className = "w-full min-w-0 space-y-1.5 pt-1 pb-1.5";
 
-        li.appendChild(a);
-        container.appendChild(li);
+          // Header Button for Carousel parent
+          const headerWrapper = document.createElement("div");
+          headerWrapper.className =
+            "flex items-center justify-between w-full py-1 px-2 rounded-md bg-muted/50 border border-border/70 hover:border-accent/60 transition-colors select-none";
+
+          const toggleBtn = document.createElement("button");
+          toggleBtn.type = "button";
+          toggleBtn.className =
+            "flex items-center gap-1.5 text-left focus:outline-none cursor-pointer flex-1 min-w-0 group";
+          toggleBtn.setAttribute("aria-expanded", "true");
+
+          const chevron = document.createElement("span");
+          chevron.className = "font-mono text-[9px] text-accent font-bold transition-transform";
+          chevron.textContent = "▼";
+
+          const titleSpan = document.createElement("span");
+          titleSpan.className =
+            "font-mono text-[11px] font-black tracking-wider text-foreground group-hover:text-accent transition-colors uppercase";
+          titleSpan.textContent = `CAROUSEL ${entry.carouselNum}`;
+
+          toggleBtn.append(chevron, titleSpan);
+
+          const badgeWrapper = document.createElement("div");
+          badgeWrapper.className = "flex items-center gap-1 font-mono text-[10px] shrink-0 ms-1";
+
+          const countSpan = document.createElement("span");
+          countSpan.className = "font-semibold text-muted-foreground";
+          countSpan.textContent = `[${entry.slides.length} slides]`;
+
+          const jumpBtn = document.createElement("button");
+          jumpBtn.type = "button";
+          jumpBtn.className =
+            "font-mono text-[10px] font-bold text-accent hover:underline px-1 py-0.5 rounded cursor-pointer";
+          jumpBtn.title = `Scroll to Carousel ${entry.carouselNum}`;
+          jumpBtn.textContent = "↗ View";
+
+          badgeWrapper.append(countSpan, jumpBtn);
+          headerWrapper.append(toggleBtn, badgeWrapper);
+          li.appendChild(headerWrapper);
+
+          // Sub-list for nested slides (Indented inner side)
+          const slidesList = document.createElement("ul");
+          slidesList.className =
+            "toc-carousel-slides space-y-1.5 ps-3 ms-2.5 border-s-2 border-border/70 w-full min-w-0 transition-all duration-200";
+
+          entry.slides.forEach((slide) => {
+            const slideLi = document.createElement("li");
+            slideLi.className = "w-full min-w-0";
+
+            const slideA = document.createElement("a");
+            slideA.href = `#carousel-${entry.carouselNum}-slide-${slide.slideIndex}`;
+            slideA.title = slide.caption;
+            slideA.className =
+              "toc-figure-link flex flex-col items-start gap-1 py-0.5 text-xs font-semibold text-foreground/80 hover:text-accent transition-colors focus:outline-none w-full min-w-0 overflow-hidden";
+
+            slideA.innerHTML = `
+              <div class="flex items-center gap-2 w-full min-w-0">
+                <span class="font-mono text-[9px] font-black text-accent bg-accent/15 px-1.5 py-0.5 rounded shrink-0 uppercase tracking-tight">[SLIDE ${slide.slideIndex + 1}]</span>
+                <span class="truncate min-w-0 block flex-1 text-xs text-foreground/85 font-medium">${slide.caption}</span>
+              </div>
+            `;
+
+            slideA.addEventListener("click", (e) => {
+              e.preventDefault();
+              setManualScrollLock();
+
+              // Smoothly scroll to carousel container with 85px offset
+              const topOffset = 85;
+              const y = entry.container.getBoundingClientRect().top + window.pageYOffset - topOffset;
+              window.scrollTo({ top: y, behavior: "smooth" });
+
+              // Switch carousel to clicked slide
+              entry.container.dispatchEvent(
+                new CustomEvent("carousel:goto", { detail: { index: slide.slideIndex } })
+              );
+              const dots = entry.container.querySelectorAll<HTMLButtonElement>(".carousel-dot");
+              if (dots[slide.slideIndex]) {
+                dots[slide.slideIndex].click();
+              }
+
+              // Visual highlight ring
+              const wrapper = entry.container.querySelector(".carousel-wrapper");
+              if (wrapper) {
+                wrapper.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
+                setTimeout(() => wrapper.classList.remove("ring-2", "ring-accent"), 2000);
+              }
+
+              if (isMobile) {
+                startItemAutoClose(slideA);
+              }
+            });
+
+            slideLi.appendChild(slideA);
+            slidesList.appendChild(slideLi);
+          });
+
+          li.appendChild(slidesList);
+
+          // Toggle expand/collapse
+          toggleBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const isExpanded = toggleBtn.getAttribute("aria-expanded") === "true";
+            if (isExpanded) {
+              slidesList.classList.add("hidden");
+              chevron.textContent = "▶";
+              toggleBtn.setAttribute("aria-expanded", "false");
+            } else {
+              slidesList.classList.remove("hidden");
+              chevron.textContent = "▼";
+              toggleBtn.setAttribute("aria-expanded", "true");
+            }
+          });
+
+          // Scroll directly to carousel
+          jumpBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            setManualScrollLock();
+            const topOffset = 85;
+            const y = entry.container.getBoundingClientRect().top + window.pageYOffset - topOffset;
+            window.scrollTo({ top: y, behavior: "smooth" });
+            const wrapper = entry.container.querySelector(".carousel-wrapper");
+            if (wrapper) {
+              wrapper.classList.add("ring-2", "ring-accent", "transition-all", "duration-300");
+              setTimeout(() => wrapper.classList.remove("ring-2", "ring-accent"), 2000);
+            }
+          });
+
+          container.appendChild(li);
+        }
       });
     };
 

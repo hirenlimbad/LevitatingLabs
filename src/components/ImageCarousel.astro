@@ -1,0 +1,627 @@
+---
+import { Image } from "astro:assets";
+
+interface Slide {
+  image: ImageMetadata;
+  caption: string;
+}
+
+interface Props {
+  slides: Slide[];
+  id?: string;
+  autoplay?: boolean;
+  interval?: number;
+}
+
+const {
+  slides,
+  id = "carousel-" + Math.random().toString(36).substring(2, 9),
+  autoplay = true,
+  interval = 2000,
+} = Astro.props;
+---
+
+<div
+  class="image-carousel-container my-8 w-full max-w-full sm:-mx-3 md:-mx-6 sm:w-[calc(100%+1.5rem)] md:w-[calc(100%+3rem)] transition-all"
+  id={id}
+  data-autoplay={autoplay ? "true" : "false"}
+  data-interval={interval.toString()}
+>
+  <div
+    class="carousel-wrapper relative overflow-hidden rounded-xl border-0 bg-muted/20 shadow-lg transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent w-full"
+    tabindex="0"
+    role="region"
+    aria-label="Interactive image carousel. Use left and right arrow keys to navigate."
+  >
+    <!-- 2s Animated Autoplay Progress Bar -->
+    <div class="carousel-progress-track absolute top-0 left-0 right-0 h-[2px] bg-border/30 z-30 overflow-hidden pointer-events-none transition-opacity duration-300">
+      <div class="carousel-progress-bar h-full w-0 bg-accent transition-none"></div>
+    </div>
+
+    <!-- Top Bar Controls: Counter and Expand Button -->
+    <div class="absolute top-3 right-3 z-30 flex items-center space-x-2">
+      <span class="carousel-counter text-xs font-mono font-medium text-foreground bg-background/85 backdrop-blur-sm px-2.5 py-1 rounded-md border border-border/60 shadow-sm select-none">
+        1 / {slides.length}
+      </span>
+      <button
+        type="button"
+        class="carousel-expand flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-background/85 backdrop-blur-sm text-foreground border border-border/60 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-90 transition-transform duration-75 shadow-md focus:outline-none touch-manipulation cursor-pointer select-none"
+        aria-label="Expand image to fullscreen"
+        title="View Fullscreen"
+      >
+        <svg class="h-4 w-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Slides Viewport (Swipe-enabled) -->
+    <div class="carousel-track relative w-full aspect-[1.15/1] sm:aspect-[1.26/1] md:aspect-[1.30/1] min-h-[450px] sm:min-h-[550px] md:min-h-[600px] flex items-center justify-center bg-transparent touch-pan-y select-none transition-colors duration-200">
+      {
+        slides.map((slide, index) => (
+          <div
+            class={`carousel-slide absolute inset-0 flex flex-col items-center justify-between pt-3 sm:pt-4 pb-11 px-2 sm:px-4 transition-opacity duration-150 ease-out transform-gpu will-change-[opacity] ${
+              index === 0 ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
+            }`}
+            data-index={index}
+            data-caption={slide.caption}
+          >
+            <!-- Image viewport with flex-1 and min-h-0: click to expand -->
+            <div
+              class="relative w-full flex-1 min-h-0 flex items-center justify-center cursor-zoom-in carousel-img-clickable p-1"
+              title="Click to view full screen"
+            >
+              <Image
+                src={slide.image}
+                alt={slide.caption}
+                loading="eager"
+                decoding="async"
+                class="max-h-full max-w-full w-auto h-auto object-contain rounded-lg shadow-sm border-0"
+              />
+            </div>
+            <!-- Caption -->
+            <p class="slide-caption mt-2 text-center text-xs sm:text-sm font-medium text-foreground bg-background/90 backdrop-blur-sm px-3.5 py-1.5 rounded-md border border-border shadow-sm max-w-[95%] select-none transition-colors duration-200">
+              {slide.caption}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Inline Navigation Controls -->
+    <button
+      type="button"
+      class="carousel-prev absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-background/85 backdrop-blur-sm text-foreground border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-90 transition-transform duration-75 shadow-md focus:outline-none touch-manipulation cursor-pointer select-none"
+      aria-label="Previous Slide"
+    >
+      <svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <button
+      type="button"
+      class="carousel-next absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-background/85 backdrop-blur-sm text-foreground border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-90 transition-transform duration-75 shadow-md focus:outline-none touch-manipulation cursor-pointer select-none"
+      aria-label="Next Slide"
+    >
+      <svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+
+    <!-- Bottom Indicator Dots -->
+    <div class="carousel-dots absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex space-x-2 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full border border-border shadow-sm transition-colors duration-200">
+      {
+        slides.map((_, index) => (
+          <button
+            type="button"
+            class={`carousel-dot h-2 rounded-full transition-all focus:outline-none touch-manipulation cursor-pointer ${
+              index === 0 ? "bg-accent w-5" : "bg-border w-2 hover:bg-muted-foreground"
+            }`}
+            data-index={index}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Fullscreen Lightbox Modal -->
+  <div
+    class="carousel-modal fixed inset-0 z-[9999] hidden bg-background/95 backdrop-blur-md flex-col justify-between p-2 sm:p-4 transition-colors duration-200 select-none outline-none"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Expanded Image Carousel View"
+    tabindex="-1"
+  >
+    <!-- Modal Top Header -->
+    <div class="flex items-center justify-between w-full max-w-7xl mx-auto z-30 select-none shrink-0 mb-1">
+      <span class="modal-counter text-xs sm:text-sm font-mono font-semibold text-foreground bg-muted/80 px-3 py-1.5 rounded-lg border border-border shadow-sm">
+        1 / {slides.length}
+      </span>
+      <div class="flex items-center space-x-2">
+        <span class="text-xs text-muted-foreground hidden sm:inline-block mr-2 font-mono">
+          [Swipe / Arrows] Navigate &bull; [Click image] Zoom &bull; [Esc] Close
+        </span>
+        <button
+          type="button"
+          class="modal-close flex h-10 w-10 items-center justify-center rounded-full bg-muted/80 text-foreground border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-90 transition-transform duration-75 shadow-lg focus:outline-none touch-manipulation cursor-pointer select-none"
+          aria-label="Close fullscreen view"
+          title="Close (Esc)"
+        >
+          <svg class="h-5 w-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Viewport Container with Dedicated Navigation Layer -->
+    <div class="relative flex-1 min-h-0 w-full max-w-7xl mx-auto flex items-center justify-center my-1 overflow-hidden">
+      <!-- Main Image Viewport (Swipe & Zoom Enabled) -->
+      <div class="modal-viewport relative w-full h-full flex items-center justify-center touch-pan-y">
+        {
+          slides.map((slide, index) => (
+            <div
+              class={`modal-slide absolute inset-0 items-center justify-center ${
+                index === 0 ? "flex opacity-100 pointer-events-auto" : "hidden opacity-0 pointer-events-none"
+              }`}
+              data-index={index}
+            >
+              <div class="relative w-full h-full flex items-center justify-center p-1 sm:p-2">
+                <Image
+                  src={slide.image}
+                  alt={slide.caption}
+                  loading="eager"
+                  decoding="async"
+                  class="modal-img max-h-full max-w-full w-auto h-auto object-contain rounded-xl cursor-zoom-in transition-transform duration-150 select-none"
+                />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- High-Performance Zero-Lag Modal Navigation Arrows -->
+      <button
+        type="button"
+        class="modal-prev absolute left-1 sm:left-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-background/90 text-foreground border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-90 transition-transform duration-75 shadow-lg focus:outline-none touch-manipulation cursor-pointer select-none"
+        aria-label="Previous Slide in Fullscreen"
+        title="Previous (Left Arrow)"
+      >
+        <svg class="h-6 w-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="modal-next absolute right-1 sm:right-4 top-1/2 -translate-y-1/2 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-background/90 text-foreground border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-90 transition-transform duration-75 shadow-lg focus:outline-none touch-manipulation cursor-pointer select-none"
+        aria-label="Next Slide in Fullscreen"
+        title="Next (Right Arrow)"
+      >
+        <svg class="h-6 w-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Caption & Indicator Dots -->
+    <div class="flex flex-col items-center justify-center w-full max-w-4xl mx-auto space-y-2.5 z-30 select-none shrink-0 mt-1">
+      <p class="modal-caption text-center text-xs sm:text-sm md:text-base font-medium text-foreground bg-muted/90 backdrop-blur-sm px-4 py-2 rounded-lg border border-border shadow-lg max-w-full transition-colors duration-200">
+        {slides[0]?.caption}
+      </p>
+      <div class="modal-dots flex space-x-2 bg-muted/90 backdrop-blur-sm px-3.5 py-1.5 rounded-full border border-border shadow-md transition-colors duration-200">
+        {
+          slides.map((_, index) => (
+            <button
+              type="button"
+              class={`modal-dot h-2.5 rounded-full transition-all focus:outline-none touch-manipulation cursor-pointer ${
+                index === 0 ? "bg-accent w-6" : "bg-border w-2.5 hover:bg-muted-foreground"
+              }`}
+              data-index={index}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupCarousels() {
+    const containers = document.querySelectorAll<HTMLElement>(".image-carousel-container");
+
+    containers.forEach((container) => {
+      if (container.dataset.initialized === "true") return;
+      container.dataset.initialized = "true";
+
+      // Inline elements
+      const wrapper = container.querySelector<HTMLElement>(".carousel-wrapper");
+      const track = container.querySelector<HTMLElement>(".carousel-track");
+      const slides = container.querySelectorAll<HTMLElement>(".carousel-slide");
+      const dots = container.querySelectorAll<HTMLButtonElement>(".carousel-dot");
+      const prevBtn = container.querySelector<HTMLButtonElement>(".carousel-prev");
+      const nextBtn = container.querySelector<HTMLButtonElement>(".carousel-next");
+      const counter = container.querySelector<HTMLElement>(".carousel-counter");
+      const expandBtn = container.querySelector<HTMLButtonElement>(".carousel-expand");
+      const clickables = container.querySelectorAll<HTMLElement>(".carousel-img-clickable");
+      const progressTrack = container.querySelector<HTMLElement>(".carousel-progress-track");
+      const progressBar = container.querySelector<HTMLElement>(".carousel-progress-bar");
+
+      // Modal elements
+      const modal = container.querySelector<HTMLElement>(".carousel-modal");
+      const modalViewport = container.querySelector<HTMLElement>(".modal-viewport");
+      const modalSlides = container.querySelectorAll<HTMLElement>(".modal-slide");
+      const modalDots = container.querySelectorAll<HTMLButtonElement>(".modal-dot");
+      const modalPrev = container.querySelector<HTMLButtonElement>(".modal-prev");
+      const modalNext = container.querySelector<HTMLButtonElement>(".modal-next");
+      const modalClose = container.querySelector<HTMLButtonElement>(".modal-close");
+      const modalCaption = container.querySelector<HTMLElement>(".modal-caption");
+      const modalCounter = container.querySelector<HTMLElement>(".modal-counter");
+
+      if (!slides.length) return;
+      let currentIndex = 0;
+      let timer: ReturnType<typeof setInterval> | null = null;
+      let isModalOpen = false;
+      let isIntersecting = true;
+      let autoplayStoppedForever = false;
+
+      // Check user reduced motion preference
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReducedMotion) {
+        autoplayStoppedForever = true;
+      }
+
+      const isAutoplay = container.dataset.autoplay !== "false" && !prefersReducedMotion;
+      const intervalTime = parseInt(container.dataset.interval || "2000", 10);
+      const totalSlides = slides.length;
+
+      // Fast modal zoom reset without looping all elements
+      function resetModalZoom() {
+        const activeImg = modalSlides[currentIndex]?.querySelector<HTMLElement>(".modal-img");
+        if (activeImg && activeImg.style.transform && activeImg.style.transform !== "scale(1)") {
+          activeImg.style.transform = "scale(1)";
+          activeImg.classList.remove("cursor-zoom-out");
+          activeImg.classList.add("cursor-zoom-in");
+        }
+      }
+
+      // Progress bar animation (never force reflow while modal is open)
+      function triggerProgressBar() {
+        if (!progressBar || autoplayStoppedForever || !isAutoplay || isModalOpen) return;
+        progressBar.style.transition = "none";
+        progressBar.style.width = "0%";
+        void progressBar.offsetWidth; // Force reflow only when autoplaying
+        if (isIntersecting) {
+          progressBar.style.transition = `width ${intervalTime}ms linear`;
+          progressBar.style.width = "100%";
+        }
+      }
+
+      function stopProgressBar() {
+        if (!progressBar) return;
+        progressBar.style.transition = "none";
+        progressBar.style.width = "0%";
+      }
+
+      let lastNavTime = 0;
+      function safeUpdate(newIndex: number) {
+        const now = performance.now();
+        if (now - lastNavTime < 100) return;
+        lastNavTime = now;
+        update(newIndex);
+      }
+
+      function update(newIndex: number) {
+        resetModalZoom();
+        currentIndex = (newIndex + totalSlides) % totalSlides;
+
+        // Strictly update all inline slides
+        slides.forEach((slide, idx) => {
+          if (idx === currentIndex) {
+            slide.classList.remove("opacity-0", "z-0", "pointer-events-none");
+            slide.classList.add("opacity-100", "z-10", "pointer-events-auto");
+          } else {
+            slide.classList.remove("opacity-100", "z-10", "pointer-events-auto");
+            slide.classList.add("opacity-0", "z-0", "pointer-events-none");
+          }
+        });
+
+        // Strictly update all inline dots (ensures only 1 active dot ever)
+        dots.forEach((dot, idx) => {
+          if (idx === currentIndex) {
+            dot.classList.remove("bg-border", "w-2");
+            dot.classList.add("bg-accent", "w-5");
+          } else {
+            dot.classList.remove("bg-accent", "w-5");
+            dot.classList.add("bg-border", "w-2");
+          }
+        });
+
+        // Instant update for modal slides: display only the active slide to eliminate GPU compositing lag
+        modalSlides.forEach((mSlide, idx) => {
+          if (idx === currentIndex) {
+            mSlide.classList.remove("hidden", "opacity-0", "pointer-events-none");
+            mSlide.classList.add("flex", "opacity-100", "pointer-events-auto");
+          } else {
+            mSlide.classList.remove("flex", "opacity-100", "pointer-events-auto");
+            mSlide.classList.add("hidden", "opacity-0", "pointer-events-none");
+          }
+        });
+
+        // Strictly update all modal dots
+        modalDots.forEach((mDot, idx) => {
+          if (idx === currentIndex) {
+            mDot.classList.remove("bg-border", "w-2.5");
+            mDot.classList.add("bg-accent", "w-6");
+          } else {
+            mDot.classList.remove("bg-accent", "w-6");
+            mDot.classList.add("bg-border", "w-2.5");
+          }
+        });
+
+        // Update counters and modal caption
+        const currentCaption = slides[currentIndex]?.dataset.caption || "";
+        if (counter) counter.textContent = `${currentIndex + 1} / ${totalSlides}`;
+        if (modalCounter) modalCounter.textContent = `${currentIndex + 1} / ${totalSlides}`;
+        if (modalCaption) modalCaption.textContent = currentCaption;
+
+        triggerProgressBar();
+      }
+
+      function startAutoplay() {
+        if (!isAutoplay || autoplayStoppedForever || isModalOpen || !isIntersecting || document.hidden || timer) {
+          return;
+        }
+        triggerProgressBar();
+        timer = setInterval(() => {
+          update(currentIndex + 1);
+        }, intervalTime);
+      }
+
+      function stopAutoplay() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+        stopProgressBar();
+      }
+
+      function stopAutoplayForever() {
+        autoplayStoppedForever = true;
+        stopAutoplay();
+        progressTrack?.classList.add("opacity-0", "pointer-events-none");
+      }
+
+      // Inline navigation clicks
+      prevBtn?.addEventListener("click", () => {
+        stopAutoplayForever();
+        safeUpdate(currentIndex - 1);
+      });
+
+      nextBtn?.addEventListener("click", () => {
+        stopAutoplayForever();
+        safeUpdate(currentIndex + 1);
+      });
+
+      dots.forEach((dot, idx) => {
+        dot.addEventListener("click", () => {
+          stopAutoplayForever();
+          safeUpdate(idx);
+        });
+      });
+
+      // External slide navigation (e.g. from Table of Contents)
+      container.addEventListener("carousel:goto", ((e: CustomEvent) => {
+        stopAutoplayForever();
+        if (typeof e.detail?.index === "number") {
+          update(e.detail.index);
+        }
+      }) as EventListener);
+
+      // Inline keyboard navigation when focused
+      wrapper?.addEventListener("keydown", (e) => {
+        if (isModalOpen) return; // Prevent double-triggering when modal is open
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          stopAutoplayForever();
+          safeUpdate(currentIndex - 1);
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          stopAutoplayForever();
+          safeUpdate(currentIndex + 1);
+        }
+      });
+
+      // Hover pause on inline carousel
+      container.addEventListener("mouseenter", stopAutoplay);
+      container.addEventListener("mouseleave", () => {
+        if (!isModalOpen && !autoplayStoppedForever) {
+          startAutoplay();
+        }
+      });
+
+      // Touch swipe gestures helper
+      function attachSwipe(target: HTMLElement | null) {
+        if (!target) return;
+        let startX = 0;
+        let startY = 0;
+
+        target.addEventListener(
+          "touchstart",
+          (e: TouchEvent) => {
+            if ((e.target as HTMLElement).closest("button")) return;
+            if (e.touches.length !== 1) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          },
+          { passive: true }
+        );
+
+        target.addEventListener(
+          "touchend",
+          (e: TouchEvent) => {
+            if ((e.target as HTMLElement).closest("button")) return;
+            if (e.changedTouches.length !== 1) return;
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+
+            // Ensure horizontal swipe is dominant and exceeds 35px threshold
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
+              stopAutoplayForever();
+              if (deltaX < 0) {
+                // Swiped Left -> Next
+                safeUpdate(currentIndex + 1);
+              } else {
+                // Swiped Right -> Prev
+                safeUpdate(currentIndex - 1);
+              }
+            }
+          },
+          { passive: true }
+        );
+      }
+
+      // Attach swipes to both inline track and modal viewport
+      attachSwipe(track);
+      attachSwipe(modalViewport);
+
+      // Modal open/close handlers
+      function openModal(targetIndex = currentIndex) {
+        if (!modal) return;
+        isModalOpen = true;
+        stopAutoplayForever();
+        update(targetIndex);
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.body.style.overflow = "hidden";
+        modal.focus();
+      }
+
+      function closeModal() {
+        if (!modal) return;
+        isModalOpen = false;
+        resetModalZoom();
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        document.body.style.overflow = "";
+        wrapper?.focus();
+      }
+
+      expandBtn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openModal();
+      });
+
+      clickables.forEach((el, idx) =>
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openModal(idx);
+        })
+      );
+
+      modalClose?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeModal();
+      });
+
+      modal?.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Instant Modal Navigation (Zero Latency)
+      modalPrev?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        stopAutoplayForever();
+        safeUpdate(currentIndex - 1);
+      });
+
+      modalNext?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        stopAutoplayForever();
+        safeUpdate(currentIndex + 1);
+      });
+
+      modalDots.forEach((dot, idx) => {
+        dot.addEventListener("click", (e) => {
+          e.stopPropagation();
+          stopAutoplayForever();
+          safeUpdate(idx);
+        });
+      });
+
+      // Modal click-to-zoom on active figure
+      modalSlides.forEach((slide) => {
+        const img = slide.querySelector<HTMLElement>("img");
+        if (!img) return;
+        img.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isCurrentlyZoomed = img.style.transform === "scale(1.85)";
+          if (isCurrentlyZoomed) {
+            img.style.transform = "scale(1)";
+            img.classList.remove("cursor-zoom-out");
+            img.classList.add("cursor-zoom-in");
+          } else {
+            img.style.transform = "scale(1.85)";
+            img.classList.remove("cursor-zoom-in");
+            img.classList.add("cursor-zoom-out");
+          }
+        });
+      });
+
+      // Keyboard navigation while modal is active
+      window.addEventListener("keydown", (e) => {
+        if (!isModalOpen) return;
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          stopAutoplayForever();
+          safeUpdate(currentIndex - 1);
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          stopAutoplayForever();
+          safeUpdate(currentIndex + 1);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          closeModal();
+        }
+      });
+
+      // Smart Viewport Observer (pause when off-screen)
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              isIntersecting = entry.isIntersecting;
+              if (isIntersecting) {
+                startAutoplay();
+              } else {
+                stopAutoplay();
+              }
+            });
+          },
+          { threshold: 0.25 }
+        );
+        observer.observe(container);
+      }
+
+      // Tab visibility change (pause when tab hidden)
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          stopAutoplay();
+        } else if (isIntersecting && !isModalOpen && !autoplayStoppedForever) {
+          startAutoplay();
+        }
+      });
+
+      // Initial autoplay start
+      startAutoplay();
+    });
+  }
+
+  setupCarousels();
+  document.addEventListener("astro:page-load", setupCarousels);
+</script>

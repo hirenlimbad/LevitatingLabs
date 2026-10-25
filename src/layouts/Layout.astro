@@ -5,6 +5,7 @@ import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
 import CookieConsent from "@/components/CookieConsent.astro";
+import ProgressBar from "@/components/ProgressBar.astro";
 import config from "@/config";
 import "@/styles/global.css";
 
@@ -41,31 +42,46 @@ const rssHref = getRelativeLocaleUrl(
     <!-- Google Consent Mode v2 -->
     <script is:inline>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
+      function gtag() {
+        dataLayer.push(arguments);
+      }
 
       const savedConsent = localStorage.getItem("cookie_consent");
       const defaultConsent = savedConsent === "accepted" ? "granted" : "denied";
 
-      gtag('consent', 'default', {
-        'analytics_storage': defaultConsent,
-        'ad_storage': 'denied',
-        'ad_user_data': 'denied',
-        'ad_personalization': 'denied'
+      gtag("consent", "default", {
+        analytics_storage: defaultConsent,
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
       });
     </script>
 
     <!-- Google tag (gtag.js) -->
-    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-SKXZ8ZPXDW"></script>
+    <script
+      is:inline
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-SKXZ8ZPXDW"></script>
     <script is:inline>
-      gtag('js', new Date());
+      gtag("js", new Date());
 
-      gtag('config', 'G-SKXZ8ZPXDW');
+      gtag("config", "G-SKXZ8ZPXDW");
     </script>
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/png" sizes="32x32" href={getAssetPath("favicon.png")} />
-    <link rel="icon" type="image/png" sizes="16x16" href={getAssetPath("favicon.png")} />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href={getAssetPath("favicon.png")}
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href={getAssetPath("favicon.png")}
+    />
     <link rel="shortcut icon" href={getAssetPath("favicon.ico")} />
     <link rel="apple-touch-icon" href={getAssetPath("apple-touch-icon.png")} />
     <link rel="canonical" href={canonicalURL} />
@@ -146,6 +162,7 @@ const rssHref = getRelativeLocaleUrl(
   <body
     class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
   >
+    <ProgressBar />
     <slot />
     <CookieConsent />
     <script>

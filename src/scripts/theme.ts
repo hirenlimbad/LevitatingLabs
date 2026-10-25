@@ -20,10 +20,12 @@ function reflect(theme?: string): void {
   root.setAttribute("data-theme", currentTheme);
   root.classList.toggle("dark", currentTheme === DARK);
   
-  const themeBtn = document.querySelector("#theme-btn");
-  if (themeBtn) {
-    themeBtn.setAttribute("aria-label", currentTheme);
-  }
+  const themeBtns = document.querySelectorAll<HTMLElement>(
+    "#theme-btn, .theme-btn, [data-button='theme']"
+  );
+  themeBtns.forEach(btn => {
+    btn.setAttribute("aria-label", currentTheme);
+  });
 
   const bg = window.getComputedStyle(document.body).backgroundColor;
   document
@@ -41,12 +43,19 @@ function toggleTheme(): void {
 
 function setup(): void {
   reflect();
-  const themeBtn = document.querySelector("#theme-btn");
-  if (themeBtn && !themeBtn.hasAttribute("data-theme-listener")) {
-    themeBtn.setAttribute("data-theme-listener", "true");
-    themeBtn.addEventListener("click", toggleTheme);
-  }
+  const themeBtns = document.querySelectorAll<HTMLElement>(
+    "#theme-btn, .theme-btn, [data-button='theme']"
+  );
+  themeBtns.forEach(btn => {
+    if (!btn.hasAttribute("data-theme-listener")) {
+      btn.setAttribute("data-theme-listener", "true");
+      btn.addEventListener("click", toggleTheme);
+    }
+  });
 }
+
+// Expose on window for inline scripts or external triggers
+(window as unknown as { toggleTheme?: () => void }).toggleTheme = toggleTheme;
 
 // Initial setup
 setup();
@@ -68,8 +77,9 @@ document.addEventListener("astro:before-swap", event => {
   }
 });
 
-// Re-run setup after View Transitions swap
+// Re-run setup after View Transitions swap & page load
 document.addEventListener("astro:after-swap", setup);
+document.addEventListener("astro:page-load", setup);
 
 // Sync with OS-level dark/light preference changes
 window

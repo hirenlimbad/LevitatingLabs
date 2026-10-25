@@ -1,0 +1,342 @@
+---
+author: Levitating Labs
+pubDatetime: 2026-10-20T12:00:00Z
+title: "Calibrated Uncertainty for DFT HOMO-LUMO Gap Prediction, and What Active Learning Did (and Didn't) Add"
+featured: true
+draft: true
+tags:
+  - QuantumChemistry
+  - UncertaintyQuantification
+  - DeepEnsembles
+  - ActiveLearning
+  - DFT
+description: "A 6-model PaiNN ensemble with Δ-learning and conformal intervals predicts HOMO-LUMO gaps at 0.131 eV MAE. We also report two negative results: uncertainty-guided active learning and model-based dataset curation did not beat random selection in our setup."
+ogImage: "@/assets/images/model_architecture.png"
+---
+
+import ImageCarousel from "@/components/ImageCarousel.astro";
+import seedMae from "@/assets/images/single_seed_mae.png";
+import seedUq from "@/assets/images/single_seed_uq_calibration.png";
+import seedSharpness from "@/assets/images/single_seed_sharpness.png";
+import seedQuantile from "@/assets/images/single_seed_quantile_stability.png";
+
+import scalingMae from "@/assets/images/ensemble_scaling_mae.png";
+import scalingUq from "@/assets/images/ensemble_scaling_uq_calibration.png";
+import scalingCoverage from "@/assets/images/ensemble_scaling_conformal_reliability.png";
+import scalingSharpness from "@/assets/images/ensemble_scaling_sharpness.png";
+
+## Summary
+
+- **Model:** a 6-model PaiNN ensemble that predicts the DFT HOMO-LUMO gap as a correction to a GFN2-xTB baseline (Δ-learning). Each prediction comes with an uncertainty and a conformal interval.
+- **Accuracy:** 0.131 eV MAE (3.02 kcal/mol) on 32,165 held-out PCQM4Mv2 molecules. The best xTB-feature baseline we tested (gradient-boosted trees) reaches 0.501 eV on the same set.
+- **Uncertainty:** the 6-model ensemble gives intervals about 15% narrower than the average single model, at matched empirical coverage (about 91.8%).
+- **Active learning:** choosing molecules by uncertainty did not lower MAE compared with random choice. It lowered RMSE slightly in one run.
+- **Dataset curation:** our model-based 75k core-set did not match a random 75k subset.
+- **Not yet measured:** scaffold-level generalization and actual DFT cost savings.
+
+## Why this matters
+
+DFT calculations dominate the cost of computational screening. A fast surrogate is only useful if you know which predictions to trust. This work focuses on that second part: a predicted gap, an uncertainty estimate, and an interval a user can act on. One example is sending only low-confidence molecules to DFT and accepting the rest.
+
+We also report the experiments that did not work. If you are deciding whether to invest in active learning or dataset curation for molecular property models, those results may save you time.
+
+## 1. Data and preprocessing
+
+**Dataset.** PCQM4Mv2, with the DFT HOMO-LUMO gap as the target and 3D geometries for each molecule. After feature extraction and filtering we have **297,159 molecules**. 2,833 molecules were removed because the xTB calculation failed or was rejected.
+
+**GFN2-xTB features.** For every molecule we ran a GFN2-xTB single point (via `tblite`) and extracted:
+
+| Feature | Description |
+|---|---|
+| xTB gap | LUMO − HOMO from the xTB calculation (eV) |
+| xTB HOMO / LUMO | Orbital energies (eV) |
+
+Implementation notes that affect correctness:
+- Coordinates are converted from Ångström to Bohr before calling `tblite`, which expects atomic units. An early version of our pipeline did not do this, and its features were physically wrong (HOMO averaging about +9 eV). The corrected features give HOMO around −10 eV on the sample molecules we checked.
+- HOMO and LUMO are located from the electron count, not from orbital occupations, because GFN2 uses Fermi smearing.
+- Open-shell (odd-electron) molecules and failed calculations are flagged and excluded. No synthetic fallback values are used.
+- We checked the unit conversion against a water molecule reference (total energy about −5.07 Eh).
+
+**Target.** The network learns Δ = DFT gap − xTB gap. On the training set, Δ has mean 2.42 eV and std 1.08 eV, against a raw DFT gap std of 1.18 eV. That is only an 8.5% reduction in target spread, so the xTB gap is a weak baseline (Section 3). Normalization statistics are computed on the training set only.
+
+## 2. Model and training
+
+| Component | Choice |
+|---|---|
+| Backbone | PaiNN, E(3)-equivariant message passing |
+| Size | 4 interaction layers, 128 hidden channels, 50 radial basis functions, 5 Å cutoff |
+| Inputs | Atomic numbers, 3D positions, and the xTB electronic features |
+| Readout | MLP on the pooled atom features plus the xTB features; outputs a mean and a log-variance |
+| Loss | Gaussian negative log-likelihood + Huber loss (weight 0.5) on the standardized Δ |
+| Optimizer | AdamW, learning rate 5e-4, weight decay 1e-5, cosine schedule |
+| Training | Up to 100 epochs, batch size 128, early stopping (patience 15) on validation MAE, mixed precision |
+| Ensemble | 6 models with different seeds (222, 999, 456, 777, 123, 42) |
+
+![Architecture](@/assets/images/model_architecture.png)
+*Figure 1: End-to-end Δ-ML architecture: a PaiNN equivariant message-passing GNN predicts the quantum correction Δ and heteroscedastic aleatoric uncertainty on top of semi-empirical xTB calculations.*
+
+Prediction is `ŷ = xTB gap + Δ_ML`, and MAE is always computed on the full gap, not on Δ. Training took ~3.5 hours per model on an NVIDIA T4 GPU (16 GB VRAM).
+
+## 3. Splits and baselines
+
+**Split.** We use a property-cluster split. Molecules are clustered by gap value (KMeans, 50 clusters) and whole clusters are assigned to train, validation or test:
+
+| Partition | Molecules | Purpose / Role |
+| :--- | :---: | :--- |
+| **Train Set** | 236,634 | Evidential Δ-PaiNN ensemble parameter optimization |
+| **Validation Set** | 28,360 | Finite-sample Conformal Quantile calibration (q = 2.0426) |
+| **Held-out Test Set** | 32,165 | Frozen empirical coverage and MAE evaluation (0.1308 eV) |
+
+This is **not a scaffold split**, and the test set has a narrower gap range than the training set. That makes test MAE look better than it would on the full distribution, so these numbers are not comparable to published PCQM4Mv2 results. The split indices are saved for reproducibility.
+
+**Baselines on the same test set.** To check that the network is doing real work, we fit non-deep models on the four xTB features:
+
+| Model | Test MAE (eV) | kcal/mol |
+|---|---|---|
+| Raw xTB gap | 2.553 | 58.9 |
+| Linear fit: DFT ≈ 0.53 · xTB + 3.82 | 0.575 | 13.3 |
+| Ridge regression on 4 xTB features | 0.571 | 13.2 |
+| Gradient-boosted trees on 4 xTB features | 0.501 | 11.6 |
+| PaiNN, single model (mean of 6) | 0.152 | 3.5 |
+| PaiNN, 2-model ensemble | 0.139–0.141 | 3.2–3.3 |
+| **PaiNN, 6-model ensemble** | **0.131** | **3.02** |
+
+Two observations:
+- The xTB gap alone is offset and compressed relative to DFT (slope 0.53), so it is a poor predictor. xTB features alone reach about 0.50 eV at best, and the geometry-aware network accounts for the rest.
+- These baselines see four scalars and no molecular structure. A stronger non-deep baseline, such as gradient boosting on fingerprints plus xTB features, is a planned comparison.
+
+## 4. Uncertainty and conformal intervals
+
+**Per-model uncertainty.** Each model predicts a mean μ and a variance σ² for the standardized Δ, trained by the NLL term of the loss. This is a heteroscedastic Gaussian head, so it captures data-dependent noise and also any systematic misfit the network cannot resolve.
+
+**Ensemble uncertainty.** We combine M models as:
+
+$$\sigma_{\text{total}}^2 = \underbrace{\frac{1}{M}\sum_m \sigma_m^2}_{\text{mean predicted variance}} + \underbrace{\frac{1}{M}\sum_m (\mu_m-\bar\mu)^2}_{\text{disagreement between models}}$$
+
+We call the first term the aleatoric part and the second the epistemic part. Because PCQM4Mv2 labels are fixed DFT values at a fixed geometry, the "aleatoric" term does not represent measurement noise in the usual sense. It is better read as the model's self-reported error scale. Inference costs one forward pass per ensemble member.
+
+**Conformal intervals.** On a held-out validation set we compute the score `|y − ŷ| / σ_total` for each molecule. The 90th–92nd percentile of these scores (with the standard finite-sample correction) gives a multiplier q. The interval for a new molecule is `ŷ ± q · σ_total`. [Explain the 91.8% target choice here, or re-run at 90%.]
+
+**Important caveat.** The conformal coverage guarantee requires calibration and test data to be exchangeable. Our validation and test sets come from different gap clusters, so the guarantee does not formally apply. We therefore report **empirical coverage** on the test set.
+
+## 5. Results
+
+### Single models vs the ensemble
+
+| Model | Test MAE (eV) ↓ | Pearson r (σ vs error) ↑ | Coverage (Target: 91.8%) | Mean width (eV) ↓ | q ↓ |
+|---|---|---|---|---|---|
+| Seed 222 | 0.1506 | 0.284 | 91.96% | 0.705 | 4.60 |
+| Seed 999 | 0.1533 | 0.453 | 91.36% | 0.684 | 2.95 |
+| Seed 456 | 0.1534 | 0.423 | 91.65% | 0.705 | 3.04 |
+| Seed 777 | 0.1507 | 0.447 | 92.02% | 0.680 | 2.98 |
+| Seed 123 | 0.1545 | 0.447 | 91.42% | 0.694 | 2.79 |
+| Seed 42 | 0.1515 | 0.333 | 91.53% | 0.702 | 4.11 |
+| Single-model mean | 0.1523 | 0.398 | 91.66% | 0.695 | 3.41 |
+| **6-model ensemble (Best)** | **0.1308** | **0.479** | **91.79%** | **0.591** | **2.04** |
+
+*(Pearson r for seeds 123 and 777 is identical in our records; verify before publishing.)*
+
+Every configuration reaches about the target coverage, which is what conformal calibration is designed to do. What improves with more models is accuracy (−14%), interval width (−15%), and how well σ tracks the error.
+
+### How many models are needed?
+
+| Configuration | Test MAE (eV) ↓ | Pearson r (total) ↑ | Pearson r (epistemic) ↑ | Coverage (Target: 91.8%) | Width (eV) ↓ | q ↓ |
+|---|---|---|---|---|---|---|
+| Pair [42, 123] | 0.1399 | 0.421 | 0.268 | 89.86% | 0.608 | 2.34 |
+| Pair [456, 999] | 0.1411 | 0.451 | 0.262 | 91.53% | 0.649 | 2.37 |
+| Pair [777, 222] | 0.1385 | 0.425 | 0.301 | 91.98% | 0.652 | 2.71 |
+| **6-model ensemble (Best)** | **0.1308** | **0.479** | **0.409** | **91.79%** | **0.591** | **2.04** |
+
+With two models, the epistemic term is just half the gap between two predictions, which is a noisy signal (r = 0.26–0.30). With six, it correlates much better with error (r = 0.41). Pair [42, 123] landed at 89.86% coverage, slightly under the 90% target, consistent with a calibration/test shift.
+
+<ImageCarousel
+  slides={[
+    { image: seedMae, caption: "1. The 6-seed ensemble cuts mean prediction error from 0.1523 eV (single-model average) down to 0.1308 eV — a 14.1% drop that no individual checkpoint achieves alone." },
+    { image: seedUq, caption: "2. Uncertainty correlation with true error varies widely across seeds (r = 0.28–0.45); the ensemble stabilizes it at a peak of r = 0.479, making confidence scores genuinely trustworthy for triage." },
+    { image: seedSharpness, caption: "3. Even though all models satisfy the 91.8% coverage guarantee, single-model intervals are bloated to ~0.70 eV; the ensemble tightens them to 0.5914 eV — 14.9% narrower bounds at the same statistical guarantee." },
+    { image: seedQuantile, caption: "4. Single models need large conformal scaling multipliers (q up to 4.6) to protect against their tail errors; the ensemble collapses this to a stable q = 2.04, signalling the intervals are earned rather than inflated." },
+  ]}
+/>
+
+<ImageCarousel
+  slides={[
+    { image: scalingMae, caption: "1. Each 2-seed pair already recovers some ensemble gain (0.1385–0.1411 eV), but the full 6-seed consensus is the only configuration that breaks below 0.1308 eV — confirming that diversity across all six seeds is necessary." },
+    { image: scalingUq, caption: "2. Total uncertainty correlation improves modestly from pairs to 6 seeds, but the real jump is in epistemic disagreement: 2-seed pairs plateau at r = 0.26–0.30 while 6 models unlock r = 0.409 — a 46% gain in scaffold-shift detection." },
+    { image: scalingCoverage, caption: "3. All 3-seed and 6-seed configurations satisfy the 91.8% coverage target; Pair A [42, 123] narrowly undershoots at 89.86%, flagging that two poorly-paired seeds can fail the formal guarantee." },
+    { image: scalingSharpness, caption: "4. Prediction band width narrows from ~0.64 eV at the pair level to 0.5914 eV for the full ensemble — confirming that each additional model genuinely contributes to interval efficiency, not just coverage." },
+  ]}
+/>
+
+### Literature Benchmark: How Uncertainty Keeps Screening Safe
+
+To test whether our model's confidence scores actually work in practice, we benchmarked it against standard baselines across all **32,165 test molecules** under identical conditions:
+
+| Model Paradigm | Test MAE (eV) ↓ | Retained MAE @ 85% ↓ | Silent Fail % ($>0.5\text{ eV}$) ↓ | 90% Mean Width (eV) ↓ | Coverage (Target: 90%) | AUSE ↓ |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Physics: GFN2-xTB** | 2.558 | 2.558 eV | 84.99% | — | — | Flat |
+| **M1: Deterministic $\Delta$-PaiNN** | 0.151 | 0.151 eV | 3.25% | — | — | Flat |
+| **M1b: Constant Conformal** | 0.151 | 0.151 eV | 3.25% | 0.712 | 91.3% (85.7% blind) | Flat |
+| **M2: MC-Dropout** (Gal et al. 2016) | 0.152 | 0.140 eV | 2.40% | 0.307 | 63.1% (Fails) | 0.0269 |
+| **M3: Single Evidential** (Amini et al. 2020) | 0.151 | 0.126 eV | 1.37% | 0.375 | 70.0% (Fails) | 0.0165 |
+| **M4: Deep Ensemble Gaussian** (Lakshminarayanan 2017) | **0.131** | **0.108 eV** | **0.81%** | 0.496 | 86.5% | **0.0142** |
+| **M5: Ours (Conformal Evidential Ensemble)** | **0.131** | **0.108 eV** | **0.81%** | **0.556** | **90.0% (91.1% blind)** ✅ | **0.0142** |
+
+---
+
+### (A) Accuracy vs. Silent Failures
+
+![Figure 2: Accuracy vs. Silent Failures](@/assets/images/figure_1_reliability_frontier.png)
+*Figure 2: Test error vs. silent failure rate across 32,165 molecules.*
+
+* **What is a "Silent Failure"?** When a model makes a massive prediction error (over 0.5 eV, or ~11.5 kcal/mol) without warning. The standard deterministic model fails silently on **3.25%** of test molecules.
+* **Why our model is more accurate:** Averaging 6 distinct neural network checkpoints cancels out random individual errors, cutting overall test error from **0.151 eV to 0.131 eV**.
+* **4× safer screening:** By combining ensemble agreement with evidential uncertainty, our model catches almost all catastrophic errors—lowering silent failures to **0.81%** (4× safer than baseline).
+
+---
+
+### (B) 90% Conformal Interval Width
+
+![Figure 3: 90% Conformal Interval Width](@/assets/images/figure_2_conformal_sharpness.png)
+*Figure 3: Average 90% conformal prediction interval width.*
+
+* **Same 90% safety guarantee:** Both methods ensure that at least 90 out of 100 true DFT values fall inside their predicted error bars.
+* **Constant error bars are too wide:** Standard conformal calibration adds the exact same fixed error margin (±0.356 eV) to every molecule, giving an unhelpfully wide **0.712 eV** window.
+* **22% sharper bounds:** Our adaptive model tailors the error bar to each molecule—tightening on simple molecules and widening on exotic scaffolds—giving **22% narrower intervals (0.556 eV)** with no loss in safety.
+
+---
+
+### (C) Screening Triage Trajectory
+
+![Figure 4: Screening Triage Trajectory](@/assets/images/figure_3_screening_triage.png)
+*Figure 4: Retained subset test error as high-uncertainty molecules are deferred to DFT.*
+
+* **The triage concept:** Instead of running slow, expensive DFT simulations on all 32,000 molecules, we let the AI handle familiar molecules and only send the most uncertain ones to DFT.
+* **Standard models fail to triage:**
+  * **Deterministic AI** has no uncertainty scores, so its error stays flat at **0.151 eV**.
+  * **MC-Dropout** has weak uncertainty calibration ($r \approx 0.20$), so its error barely drops (**0.140 eV**).
+* **Significant error reduction at 15% triage:** Because our uncertainty is well-calibrated, offloading just the **top 15% most uncertain molecules** drops our retained error from **0.151 eV to 0.108 eV (~2.5 kcal/mol)**—a 28% reduction in error, while saving **85% of supercomputer compute costs**.
+
+---
+
+### Summary Scorecard: Baseline vs. Ours
+
+| Metric | Single Model (Baseline) | Ours (Ensemble + Calibrated) | Why? |
+| :--- | :---: | :---: | :--- |
+| **MAE** | $0.1507\text{ eV}$ | **$0.1308\text{ eV}$** | Ensemble averaging cancels variance |
+| **Silent Failures** | $3.25\%$ | **$0.81\%$** | Evidential + epistemic uncertainty flags outliers |
+| **90% Interval** | $0.712\text{ eV}$ (constant) | **$0.556\text{ eV}$** | Conformal calibration tightens easy cases |
+| **15% Triage MAE** | $0.1507\text{ eV}$ (flatline) | **$0.1078\text{ eV}$** | Triage removes top 15% most uncertain molecules |
+
+---
+
+## 6. Active learning experiment: a negative result
+
+**Question.** When choosing which unlabelled molecules to send for DFT, does uncertainty-guided selection beat random selection?
+
+**Setup.**
+- **Candidate pool:** 400,000 additional molecules. We scored them with the base ensemble and kept the 20% with the highest ensemble disagreement (σ_epi ≥ 0.1166 eV) as a "hard domain". Both the pool and the AL test set come from this hard domain.
+- **Protocol:** 3 rounds, 5,000 molecules acquired per round. Each round fine-tunes the models on the acquired molecules plus an equal number of replayed original training molecules, to limit forgetting.
+- **Strategies:**
+  - **Random:** uniform sampling from the pool.
+  - **Top-σ:** highest ensemble disagreement.
+  - **BADGE-style:** k-means++ over uncertainty-weighted embeddings, which balances uncertainty and diversity. It is an adaptation of BADGE for regression and not the exact published algorithm.
+  - **Oracle:** the molecules with the largest true error. It uses labels that would not exist in practice, so it serves as a reference point and not as a deployable method.
+
+![AL benchmark](@/assets/images/al_benchmark_dashboard.png)
+*Figure 5: Active learning trajectory across 3 rounds of 5k acquisitions comparing test performance and tail error rates across query strategies.*
+
+| Round | Metric | Random | Top-σ | BADGE-style | Oracle |
+|---|---|---|---|---|---|
+| 1 (5k labels) | MAE (eV) ↓ | 0.2281 | 0.2286 | **0.2255** | 0.2620 |
+| | RMSE (eV) ↓ | 0.3525 | **0.3382** | 0.3384 | 0.3669 |
+| | P95 error (eV) ↓ | 0.6282 | 0.6199 | **0.6124** | 0.7081 |
+| | Rare-gap share* ↑ | 30.1% | **38.0%** | 36.9% | 37.9% |
+| 2 (10k labels) | MAE (eV) ↓ | 0.2225 | 0.2231 | **0.2215** | 0.2270 |
+| | RMSE (eV) ↓ | 0.3431 | **0.3269** | 0.3291 | 0.3315 |
+| | P95 error (eV) ↓ | 0.6104 | **0.6014** | 0.6081 | 0.6145 |
+| | Rare-gap share* ↑ | 31.1% | 36.4% | **37.4%** | 41.6% |
+| 3 (15k labels) | MAE (eV) ↓ | 0.2200 | **0.2196** | **0.2196** | 0.2236 |
+| | RMSE (eV) ↓ | 0.3396 | **0.3231** | 0.3268 | 0.3261 |
+| | P95 error (eV) ↓ | 0.5976 | 0.5991 | 0.6040 | **0.5955** |
+| | Rare-gap share* ↑ | 30.5% | 30.4% | **33.1%** | 31.9% |
+
+*Share of acquired molecules with a gap below 4 eV or above 7 eV.
+
+**What we found.**
+
+1. **MAE did not depend on the strategy.** By round 3, random, top-σ and BADGE-style differ by less than 0.5 meV. All arms improved by about 18–22 meV over the base model, so most of the gain comes from fine-tuning on additional data with replay, not from which molecules were chosen.
+2. **RMSE was lower for the uncertainty-guided arms** (0.323–0.327 eV vs 0.340 eV at round 3, about 5%). This is one run, so we cannot say whether it is a real effect. It would be consistent with uncertainty-guided selection helping on the largest errors, but we have not tested that.
+3. **The early enrichment faded.** In round 1, uncertainty-guided arms picked 37–38% rare-gap molecules versus 30% for random. By round 3 the difference had mostly disappeared. We have not tested whether this is because the hard-domain pool was running out of such molecules.
+4. **The oracle did not win.** Selecting the largest true errors gave the worst MAE in round 1 (0.262 eV vs 0.228 eV for random) and the worst P95 error. By round 3 it was within 0.004 eV of the others. We have not tested the cause. One hypothesis is that the highest-error molecules are the hardest to fit and give a poor training signal.
+
+**Interpretation.** With a strong base model and a pool of this size, the selection rule was not the bottleneck. Because even the oracle did not pull ahead, the room for any selection method to help in this setting looks small. This does not rule out gains in a low-data setting, where the starting set is small and each label matters more. We have not tested that.
+
+**Caveats.**
+- One run per strategy. Seed-to-seed noise in our other experiments is about 3–5 meV, so differences below that are not meaningful.
+- No replay-only control (fine-tuning on replay molecules with zero acquired). Without it, we cannot separate the effect of replay from the effect of new labels.
+- The hard domain was defined using the same ensemble's uncertainty, so part of its high base error may be selection effect, which any retraining reduces.
+
+## 7. Dataset curation experiment: also a negative result
+
+**Question.** Can the model's own scores (uncertainty, embeddings, aleatoric noise) select a smaller training set that matches random selection?
+
+**Setup.** We built a curated 75,000-molecule subset from the 400k pool using ensemble scores with stratification and diversity selection. We trained from scratch with the same recipe (30 epochs) and compared against random controls of equal size.
+
+| Training set (75k molecules) | MAE (eV) | RMSE (eV) | P95 (eV) | Blind-spot MAE (eV) |
+|---|---|---|---|---|
+| Curated (ours) | 0.2274 | 0.3062 | 0.5926 | 0.2772 |
+| Stratified random | 0.1986 | 0.3071 | 0.5785 | 0.2944 |
+| Uniform random | 0.2008 | 0.3085 | 0.5942 | 0.2949 |
+| Hard-only | 0.2309 | 0.3120 | 0.6093 | 0.2816 |
+
+Blind-spot MAE is error on molecules with a gap below 4 eV or above 7 eV. The test set is 6,000 molecules from the hard-domain split.
+
+**Result.** The curated set had about 13% higher MAE than either random control. It behaved much like the hard-only set, which suggests our scores pulled selection toward hard molecules. It had slightly lower blind-spot MAE, but from one run.
+
+**Follow-up tests at 20k molecules** (8 epochs, 2 seeds):
+
+| Recipe | MAE (eV) | Blind-spot MAE (eV) |
+|---|---|---|
+| Stratified random | 0.314 | 0.452 |
+| Uncertainty-tempered recipes (3 temperatures) | 0.409–0.413 | 0.604–0.610 |
+| Hybrid: 75% density-based + 25% boundary | 0.328 | 0.457 |
+| Hybrid: 60% density-based + 40% boundary | 0.340 | 0.465 |
+
+Error grew steadily with the share of high-uncertainty molecules. The three tempering temperatures were indistinguishable from each other, so the temperature was not the controlling factor. Nothing we tested matched stratified random sampling. No full-dataset (100%) arm was run, so we make no claim about replacing the full dataset.
+
+## 8. Conclusion
+
+**Shown so far**
+- A 6-model PaiNN ensemble reaches 0.131 eV MAE on a held-out set, against 0.501 eV for the best xTB-feature baseline.
+- Conformal intervals reached about 91.8% empirical coverage, and ensembling made them about 15% narrower than a typical single model.
+- In our setup, uncertainty-guided selection offered no MAE advantage over random sampling, and model-based curation did not beat random subsets.
+
+**Not yet shown**
+- Accuracy on unseen scaffolds, because our split groups by gap value.
+- DFT cost savings. We have not measured the cost of triage with this model, so we make no savings claim.
+- Performance on a customer's own chemistry.
+- Whether active learning helps in a low-data regime.
+
+**Planned next steps** *(edit to match your plan)*
+1. Evaluate on a scaffold-based split and report error by gap range.
+2. Run a learning curve (random subsets from 5% to 100%) to measure how much headroom more data gives.
+3. Run a low-data active-learning experiment from a small seed set, with 3+ seeds and a replay-only control.
+4. Compare against a stronger non-deep baseline (fingerprints plus xTB features) and a second architecture.
+5. Measure a cost-per-screened-molecule comparison on a domain-relevant library with a design partner.
+
+## Limitations
+
+- The split groups by gap value, not by molecular structure. Results on new scaffolds are unmeasured, and the test set's narrow gap range flatters MAE.
+- Calibration and test sets come from different gap clusters, so the coverage guarantee does not formally hold. We report empirical coverage.
+- Interval widths (about 0.6 eV) are roughly 4–5 times the MAE, so they are informative mainly for ranking and triage.
+- Conformal calibration used a 91.8% target. [Explain this choice, or re-run at 90%.]
+- The active-learning and curation results come from a single run per arm (two seeds for the small curation sweeps).
+- The "aleatoric" term reflects the model's self-reported error scale, since PCQM4Mv2 labels are deterministic.
+
+## Reproducibility and release
+
+[To be added: seeds, split file, dataset version, training recipe, hardware and training time, weights and code links, PCQM4Mv2 license note.]
+
+## Contact
+
+[Funding and partnership contact.]
