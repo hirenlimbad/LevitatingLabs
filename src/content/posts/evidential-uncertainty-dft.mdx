@@ -2,7 +2,7 @@
 author: Levitating Labs
 pubDatetime: 2026-10-25T18:30:00Z
 timezone: "Asia/Kolkata"
-title: "Calibrated Uncertainty for DFT HOMO-LUMO Gap Prediction, and What Active Learning Did (and Didn't) Add"
+title: "Calibrated Uncertainty for DFT HOMO-LUMO Gap Prediction, and What Active Learning Did (and Didn't)"
 featured: true
 draft: false
 tags:
@@ -53,7 +53,6 @@ We also report two honest negative results: uncertainty-guided active learning a
 | xTB gap | LUMO − HOMO energy difference from the xTB calculation (eV) |
 | xTB HOMO | Energy of the highest occupied molecular orbital (eV) |
 | xTB LUMO | Energy of the lowest unoccupied molecular orbital (eV) |
-| xTB dipole moment | Magnitude of the molecular electric dipole moment (Debye) |
 
 Implementation notes that affect correctness:
 - Coordinates are converted from Ångström to Bohr before calling `tblite`, which expects atomic units. An early version of our pipeline did not do this, and its features were physically wrong (HOMO averaging about +9 eV). The corrected features give HOMO around $-10\text{ eV}$ on the sample molecules we checked.
@@ -80,7 +79,7 @@ Implementation notes that affect correctness:
 *Figure 1: End-to-end multimodal pipeline: 3D molecular graphs and GFN2-xTB semi-empirical physics features pass through an equivariant PaiNN backbone and multimodal fusion trunk to yield calibrated gap predictions, uncertainty estimates, and conformal bounds in a single forward pass.*
 
 **Architecture Breakdown:**
-- **Input Representation:** Combines the 3D molecular graph (atomic numbers $Z$, positions $\mathbf{R}$, charges) with physics priors from the GFN2-xTB engine (HOMO, LUMO, gap, dipole).
+- **Input Representation:** Combines the 3D molecular graph (atomic numbers $Z$, positions $\mathbf{R}$, charges) with physics priors from the GFN2-xTB engine (HOMO, LUMO, gap).
 - **Equivariant 3D Backbone:** 4 PaiNN interaction layers preserve physical 3D rotational symmetries, followed by invariant graph pooling.
 - **Multimodal Fusion Trunk:** Concatenates pooled graph latents with global quantum physics features through a LayerNorm-SiLU readout trunk.
 - **Heteroscedastic Gaussian Readout:** Predicts the residual mean correction and log-variance $(\mu_m, \log \sigma_m^2)$ for each ensemble checkpoint, capturing input-dependent aleatoric uncertainty under a Gaussian NLL objective while epistemic uncertainty is extracted via ensemble consensus disagreement.
@@ -394,10 +393,10 @@ To facilitate independent verification and allow the community to build upon thi
 
 | Resource | Description | Link |
 | :--- | :--- | :--- |
+| **Kaggle Quickstart Notebook** | Interactive notebook with pre-configured environment to test model predictions | [Kaggle Quickstart](https://www.kaggle.com/code/hirenlimbad/starter-notebook-homo-lumo-ll/) |
 | **Model Weights & Predictor** | Pre-trained models and Python scripts to run predictions from SMILES | [Hugging Face Hub](https://huggingface.co/hirenlimbad/homo_lumo_gap) |
 | **300k Dataset Preparation** | Generates 3D structures and baseline physics features for 300,000 molecules | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/dataprep-xtbd-homolumo) |
 | **400k Pool Preparation** | Prepares the 400,000 unlabelled candidate molecules for active learning | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/1-4dt-prep-homo-lumo) |
-| **Kaggle Quickstart Notebook** | Interactive notebook with pre-configured environment to test model predictions | [Kaggle Quickstart](https://www.kaggle.com/code/hirenlimbad/42-123-homo-lumo-gap-ll) |
 | **Active Learning Campaign** | Tests if clever data selection beats random sampling across 3 rounds | [Kaggle Notebook](https://www.kaggle.com/code/hirenlimbad/al-homosing) |
 | **Dataset Curation Engine** | Filters the 400k pool into compact, high-density 75k subsets | [Kaggle Notebook](https://www.kaggle.com/code/unkowngabru/dataset-curation-al) |
 | **75k vs. 300k Benchmark** | Controlled training benchmark testing curated vs. stratified random 75k subsets | [Kaggle Notebook](https://www.kaggle.com/code/unkowngabru/final-dataset-curation-al/) |
